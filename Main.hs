@@ -4,39 +4,50 @@ module Main (
 
 import System (getArgs)
 import System.IO (stdin, putStrLn, openFile, hClose, hIsEOF, hGetLine, IOMode(ReadMode))
-import System.Directory (doesFileExist, doesDirectoryExist)
+import System.Directory (getPermissions, Permissions(readable), doesFileExist, doesDirectoryExist, getDirectoryContents)
 
 main :: IO ()
 main = do
 	args <- getArgs
-	path <- return $ if length args >= 1 then head args else error "No path input" -- TODO: else stdin
-	putStrLn path
-	return ()
+	if length args >= 1 
+		then processPath $ head args -- Take the first argument as the path if there is one.
+		else processHandle stdin -- If no argument process stdin.
 
 processPath path = do
-	isFile <- doesFileExist path
+	putStrLn $ "//**-- Processing path: " ++ path
 	isDir <- doesDirectoryExist path
-	if isDir 
-		then processDirectory path 
-		else processFile path
+	isFile <- doesFileExist path
+	if not $ isDir || isFile
+		then putStrLn  $ "//**-- " ++ path ++ " does not exists"
+		else do
+			perms <- getPermissions path
+			if not $ readable perms
+				then putStrLn  $ "//**-- " ++ path ++ " has no read permission"
+				else if isDir 
+					then processDirPath path 
+					else processFilePath path 
 
-processDirectory fileName = do
-	handle <- openFile fileName ReadMode
-	hClose handle
-	return fileName
+processDirPath dirPath = do
+	putStrLn $ "//**-- Processing dir path: " ++ dirPath
+	paths <- getDirectoryContents dirPath
+	sequence_  $ map processPath $ map ((dirPath ++ "/") ++) $ filter (flip notElem [".", ".."]) paths
 
-processFile fileName = do
-	handle <- openFile fileName ReadMode
+processFilePath filePath = do
+	putStrLn $ "//**-- Processing file path: " ++ filePath
+	handle <- openFile filePath ReadMode
 	-- TODO: Set buffer mode
-	lines <- readLines handle
+	processHandle handle
 	hClose handle
-	return fileName
 
--- processFileHandle handle = do
+processHandle handle = do
+	lines <- readLines handle
+	return ()
 
 readLines handle = do
 	isEOF <- hIsEOF handle
 	if isEOF then return [] else do
 		head' <- hGetLine handle 
+		putStrLn head'
 		tail' <- readLines handle
 		return $ head' : tail'
+
