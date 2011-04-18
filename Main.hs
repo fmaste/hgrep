@@ -2,9 +2,27 @@ module Main (
 	main
 ) where
 
-import System (getArgs)
-import System.IO (stdin, putStrLn, openFile, hClose, hIsEOF, hGetLine, IOMode(ReadMode))
-import System.Directory (getPermissions, Permissions(readable), doesFileExist, doesDirectoryExist, getDirectoryContents)
+import System (
+	getArgs
+)
+import System.IO (
+	stdin, 
+	putStrLn, 
+	openFile, 
+	hSetBuffering, 
+	BufferMode(BlockBuffering), 
+	hClose, 
+	hIsEOF, 
+	hGetLine, 
+	IOMode(ReadMode)
+)
+import System.Directory (
+	getPermissions, 
+	Permissions(readable), 
+	doesFileExist, 
+	doesDirectoryExist, 
+	getDirectoryContents
+)
 
 main :: IO ()
 main = do
@@ -35,7 +53,7 @@ processDirPath dirPath = do
 processFilePath filePath = do
 	putStrLn $ "//**-- Processing file path: " ++ filePath
 	handle <- openFile filePath ReadMode
-	-- TODO: Set buffer mode
+	hSetBuffering handle $ BlockBuffering (Just 2048)
 	processHandle handle
 	hClose handle
 
