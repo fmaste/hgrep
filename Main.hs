@@ -2,6 +2,7 @@ module Main (
 	main
 ) where
 
+import Control.Monad
 import System (
 	getArgs)
 import System.IO (
