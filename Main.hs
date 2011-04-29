@@ -3,8 +3,7 @@ module Main (
 ) where
 
 import System (
-	getArgs
-)
+	getArgs)
 import System.IO (
 	stdin, 
 	putStrLn, 
@@ -14,15 +13,13 @@ import System.IO (
 	hClose, 
 	hIsEOF, 
 	hGetLine, 
-	IOMode(ReadMode)
-)
+	IOMode(ReadMode))
 import System.Directory (
 	getPermissions, 
 	Permissions(readable), 
 	doesFileExist, 
 	doesDirectoryExist, 
-	getDirectoryContents
-)
+	getDirectoryContents)
 
 main :: IO ()
 main = do
