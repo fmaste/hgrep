@@ -78,7 +78,6 @@ readLines handle = do
 
 readLine :: Handle -> WriterT [String] IO String
 readLine handle = do
-	tell ["Reading line"]
 	line <- lift $ hGetLine handle
 	return line
 
