@@ -30,48 +30,47 @@ main :: IO ()
 main = do
 	args <- getArgs
 	if length args >= 1 
-		then processPath $ head args -- Take the first argument as the path if there is one.
+		then do
+			log <- execWriterT $ processPath $ head args -- Take the first argument as the path if there is one.
+			putStrLn "------ LOG ------"
+			mapM_ putStrLn log
+			return ()
 		else do
-			runWriterT $ processHandle stdin -- If no argument process stdin.
+			log <- execWriterT $ processHandle stdin -- If no argument process stdin.
+			putStrLn "------ LOG ------"
+			mapM_ putStrLn log
 			return ()
 
-processPath :: FilePath -> IO ()
+processPath :: FilePath -> WriterT [String] IO ()
 processPath path = do
-	putStrLn $ "//**-- Processing path: " ++ path
-	isDir <- doesDirectoryExist path
-	isFile <- doesFileExist path
+	tell ["Processing path: " ++ path]
+	isDir <- lift $ doesDirectoryExist path
+	isFile <- lift $ doesFileExist path
 	if not $ isDir || isFile
-		then putStrLn  $ "//**-- " ++ path ++ " does not exists"
+		then tell [path ++ " does not exists"]
 		else do
-			perms <- getPermissions path
+			perms <- lift $ getPermissions path
 			if not $ readable perms
-				then putStrLn  $ "//**-- " ++ path ++ " has no read permission"
+				then tell [path ++ " has no read permission"]
 				else if isDir 
-					then do
-						log <- execWriterT $ processDirPath path 
-						putStrLn "------ LOG ------"
-						mapM_ putStrLn log 
-						return ()
-					else do
-						log <- execWriterT $ processFilePath path 
-						putStrLn "------ LOG ------"
-						mapM_ putStrLn log
-						return ()
+					then processDirPath path 
+					else processFilePath path 
 
 processDirPath :: FilePath -> WriterT [String] IO ()
 processDirPath dirPath = do
 	tell ["Processing dir path: " ++ dirPath]
 	paths <- lift $ getDirectoryContents dirPath
-	lift $ sequence_  $ map processPath $ map ((dirPath ++ "/") ++) $ filter (flip notElem [".", ".."]) paths
+	sequence_  $ map processPath $ map ((dirPath ++ "/") ++) $ filter (flip notElem [".", ".."]) paths
 
-processFilePath :: FilePath -> WriterT [String] IO [String]
+processFilePath :: FilePath -> WriterT [String] IO ()
 processFilePath filePath = do
 	tell ["Processing file path: " ++ filePath]
 	handle <- lift $ openFile filePath ReadMode
 	lift $ hSetBuffering handle $ BlockBuffering (Just 2048)
 	lines <- processHandle handle
 	lift $ hClose handle
-	return lines
+	-- TODO: return lines
+	return ()
 
 processHandle :: Handle -> WriterT [String] IO [String]
 processHandle handle = do
