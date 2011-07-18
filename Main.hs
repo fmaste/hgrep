@@ -71,14 +71,14 @@ readLines :: Handle -> IO [String]
 readLines handle = do
 	isEOF <- hIsEOF handle
 	if isEOF then return [] else do
-		(head', log:logs) <- runWriterT $ readLine handle 
-		putStrLn log
+		(head', log) <- runWriterT $ readLine handle 
+		putStrLn head' 
 		tail' <- readLines handle
 		return $ head' : tail'
 
 readLine :: Handle -> WriterT [String] IO String
 readLine handle = do
+	tell ["Reading line"]
 	line <- lift $ hGetLine handle
-	tell [line]
 	return line
 
