@@ -66,10 +66,9 @@ processFilePath filePath = do
 	processHandle handle
 	lift $ hClose handle
 
-processHandle :: Handle -> WriterT [String] IO ()
+processHandle :: Handle -> WriterT [String] IO [String]
 processHandle handle = do
-	lines <- readLines handle
-	return ()
+	readLines handle
 
 readLines :: Handle -> WriterT [String] IO [String]
 readLines handle = do
