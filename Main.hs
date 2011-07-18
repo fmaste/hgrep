@@ -29,6 +29,7 @@ main = do
 		then processPath $ head args -- Take the first argument as the path if there is one.
 		else processHandle stdin -- If no argument process stdin.
 
+processPath :: FilePath -> IO ()
 processPath path = do
 	putStrLn $ "//**-- Processing path: " ++ path
 	isDir <- doesDirectoryExist path
@@ -43,11 +44,13 @@ processPath path = do
 					then processDirPath path 
 					else processFilePath path 
 
+processDirPath :: FilePath -> IO ()
 processDirPath dirPath = do
 	putStrLn $ "//**-- Processing dir path: " ++ dirPath
 	paths <- getDirectoryContents dirPath
 	sequence_  $ map processPath $ map ((dirPath ++ "/") ++) $ filter (flip notElem [".", ".."]) paths
 
+processFilePath :: FilePath -> IO ()
 processFilePath filePath = do
 	putStrLn $ "//**-- Processing file path: " ++ filePath
 	handle <- openFile filePath ReadMode
