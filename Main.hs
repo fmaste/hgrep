@@ -49,10 +49,12 @@ processPath path = do
 				else if isDir 
 					then do
 						log <- execWriterT $ processDirPath path 
+						putStrLn "------ LOG ------"
 						mapM_ putStrLn log 
 						return ()
 					else do
 						log <- execWriterT $ processFilePath path 
+						putStrLn "------ LOG ------"
 						mapM_ putStrLn log
 						return ()
 
