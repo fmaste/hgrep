@@ -3,7 +3,6 @@ module Main (
 ) where
 
 import Control.Monad
-import Data.Monoid
 import System (
 	getArgs)
 import System.IO (
@@ -25,15 +24,6 @@ import System.Directory (
 	getDirectoryContents)
 
 -- Writer monad
-
-newtype Writer w a = Writer {runWriter :: (a, w)}
-
-instance (Monoid w) => Monad (Writer w) where
-	return x = Writer (x, mempty)
-	(Writer (x, w)) >>= f = let (Writer (x', w')) = f x in Writer (x', mappend w w')
-
-tell :: (Monoid w) => w -> Writer w ()
-tell w = Writer ((), w)
 
 main :: IO ()
 main = do
