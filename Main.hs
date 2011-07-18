@@ -69,6 +69,7 @@ processFilePath filePath = do
 
 processHandle :: Handle -> WriterT [String] IO [String]
 processHandle handle = do
+	tell ["Processing handle: " ++ (show handle)]
 	readLines handle
 
 readLines :: Handle -> WriterT [String] IO [String]
