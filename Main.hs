@@ -47,16 +47,18 @@ processPath path = do
 			if not $ readable perms
 				then putStrLn  $ "//**-- " ++ path ++ " has no read permission"
 				else if isDir 
-					then processDirPath path 
+					then do
+						runWriterT $ processDirPath path 
+						return ()
 					else do
 						runWriterT $ processFilePath path 
 						return ()
 
-processDirPath :: FilePath -> IO ()
+processDirPath :: FilePath -> WriterT [String] IO ()
 processDirPath dirPath = do
-	putStrLn $ "//**-- Processing dir path: " ++ dirPath
-	paths <- getDirectoryContents dirPath
-	sequence_  $ map processPath $ map ((dirPath ++ "/") ++) $ filter (flip notElem [".", ".."]) paths
+	tell ["Processing dir path: " ++ dirPath]
+	paths <- lift $ getDirectoryContents dirPath
+	lift $ sequence_  $ map processPath $ map ((dirPath ++ "/") ++) $ filter (flip notElem [".", ".."]) paths
 
 processFilePath :: FilePath -> WriterT [String] IO [String]
 processFilePath filePath = do
