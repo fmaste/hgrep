@@ -64,17 +64,17 @@ processFilePath filePath = do
 
 processHandle :: Handle -> IO ()
 processHandle handle = do
-	lines <- readLines handle
+	lines <- runWriterT $ readLines handle
 	return ()
 
-readLines :: Handle -> IO [String]
+readLines :: Handle -> WriterT [String] IO [String]
 readLines handle = do
-	isEOF <- hIsEOF handle
+	isEOF <- lift $ hIsEOF handle
 	if isEOF then return [] else do
-		(head', log) <- runWriterT $ readLine handle 
-		putStrLn head' 
+		line <- readLine handle
+		lift $ putStrLn line 
 		tail' <- readLines handle
-		return $ head' : tail'
+		return $ line : tail'
 
 readLine :: Handle -> WriterT [String] IO String
 readLine handle = do
