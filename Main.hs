@@ -58,13 +58,14 @@ processDirPath dirPath = do
 	paths <- getDirectoryContents dirPath
 	sequence_  $ map processPath $ map ((dirPath ++ "/") ++) $ filter (flip notElem [".", ".."]) paths
 
-processFilePath :: FilePath -> WriterT [String] IO ()
+processFilePath :: FilePath -> WriterT [String] IO [String]
 processFilePath filePath = do
 	tell ["Processing file path: " ++ filePath]
 	handle <- lift $ openFile filePath ReadMode
 	lift $ hSetBuffering handle $ BlockBuffering (Just 2048)
-	processHandle handle
+	lines <- processHandle handle
 	lift $ hClose handle
+	return lines
 
 processHandle :: Handle -> WriterT [String] IO [String]
 processHandle handle = do
