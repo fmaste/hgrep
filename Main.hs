@@ -48,10 +48,12 @@ processPath path = do
 				then putStrLn  $ "//**-- " ++ path ++ " has no read permission"
 				else if isDir 
 					then do
-						runWriterT $ processDirPath path 
+						log <- execWriterT $ processDirPath path 
+						mapM_ putStrLn log 
 						return ()
 					else do
-						runWriterT $ processFilePath path 
+						log <- execWriterT $ processFilePath path 
+						mapM_ putStrLn log
 						return ()
 
 processDirPath :: FilePath -> WriterT [String] IO ()
