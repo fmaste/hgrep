@@ -6,6 +6,7 @@ import Control.Monad
 import System (
 	getArgs)
 import System.IO (
+	Handle,
 	stdin, 
 	putStrLn, 
 	openFile, 
@@ -62,6 +63,7 @@ processHandle handle = do
 	lines <- readLines handle
 	return ()
 
+readLines :: Handle -> IO [String]
 readLines handle = do
 	isEOF <- hIsEOF handle
 	if isEOF then return [] else do
