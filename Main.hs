@@ -31,7 +31,9 @@ main = do
 	args <- getArgs
 	if length args >= 1 
 		then processPath $ head args -- Take the first argument as the path if there is one.
-		else processHandle stdin -- If no argument process stdin.
+		else do
+			runWriterT $ processHandle stdin -- If no argument process stdin.
+			return ()
 
 processPath :: FilePath -> IO ()
 processPath path = do
@@ -59,12 +61,12 @@ processFilePath filePath = do
 	putStrLn $ "//**-- Processing file path: " ++ filePath
 	handle <- openFile filePath ReadMode
 	hSetBuffering handle $ BlockBuffering (Just 2048)
-	processHandle handle
+	execWriterT $ processHandle handle
 	hClose handle
 
-processHandle :: Handle -> IO ()
+processHandle :: Handle -> WriterT [String] IO ()
 processHandle handle = do
-	lines <- runWriterT $ readLines handle
+	lines <- readLines handle
 	return ()
 
 readLines :: Handle -> WriterT [String] IO [String]
