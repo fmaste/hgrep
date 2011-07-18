@@ -68,8 +68,13 @@ readLines :: Handle -> IO [String]
 readLines handle = do
 	isEOF <- hIsEOF handle
 	if isEOF then return [] else do
-		head' <- hGetLine handle 
+		head' <- readLine handle 
 		putStrLn head'
 		tail' <- readLines handle
 		return $ head' : tail'
+
+readLine :: Handle -> IO String
+readLine handle = do
+	line <- hGetLine handle
+	return line
 
