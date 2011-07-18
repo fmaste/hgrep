@@ -83,7 +83,7 @@ readLines handle = do
 	isEOF <- lift $ hIsEOF handle
 	if isEOF then return [] else do
 		head' <- readLine handle
-		lift $ putStrLn head' 
+		lift $ putStrLn head' -- TODO: Remove line printing!
 		tail' <- readLines handle
 		return $ head' : tail'
 
