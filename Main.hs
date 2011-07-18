@@ -3,6 +3,7 @@ module Main (
 ) where
 
 import Control.Monad
+import Control.Monad.Writer
 import System (
 	getArgs)
 import System.IO (
@@ -70,13 +71,14 @@ readLines :: Handle -> IO [String]
 readLines handle = do
 	isEOF <- hIsEOF handle
 	if isEOF then return [] else do
-		head' <- readLine handle 
+		(head', log:logs) <- runWriterT $ readLine handle 
+		putStrLn log
 		tail' <- readLines handle
 		return $ head' : tail'
 
-readLine :: Handle -> IO String
+readLine :: Handle -> WriterT [String] IO String
 readLine handle = do
-	line <- hGetLine handle
-	putStrLn line
+	line <- lift $ hGetLine handle
+	tell [line]
 	return line
 
