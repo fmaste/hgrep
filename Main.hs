@@ -59,6 +59,7 @@ processFilePath filePath = do
 	processHandle handle
 	hClose handle
 
+processHandle :: Handle -> IO ()
 processHandle handle = do
 	lines <- readLines handle
 	return ()
