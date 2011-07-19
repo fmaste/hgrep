@@ -73,8 +73,10 @@ processDirPath :: FilePath -> WriterT [String] IO DirectoryContent
 processDirPath dirPath = do
 	tell ["Processing dir path: " ++ dirPath]
 	paths <- lift $ getDirectoryContents dirPath
-	dirContentsList <- sequence $ map processPath $ map ((dirPath ++ "/") ++) $ filter (flip notElem [".", ".."]) paths
+	dirContentsList <- sequence $ map processPath $ map ((dirPath ++ "/") ++) $ excludeDots paths
 	return $ concat dirContentsList
+
+excludeDots = filter (flip notElem [".", ".."])
 
 processFilePath :: FilePath -> WriterT [String] IO FileContent
 processFilePath filePath = do
