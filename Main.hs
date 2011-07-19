@@ -12,6 +12,8 @@ import System.IO (
 	putStrLn, 
 	openFile, 
 	hSetBuffering, 
+	hSetEncoding,
+	utf8,
 	BufferMode(BlockBuffering), 
 	hClose, 
 	hIsEOF, 
@@ -69,6 +71,7 @@ processFilePath filePath = do
 	tell ["Processing file path: " ++ filePath]
 	handle <- lift $ openFile filePath ReadMode
 	lift $ hSetBuffering handle $ BlockBuffering (Just 2048)
+	lift $ hSetEncoding handle utf8
 	lines <- processHandle handle
 	lift $ hClose handle
 	return lines
