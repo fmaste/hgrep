@@ -4,6 +4,8 @@ module Main (
 
 import Control.Monad
 import Control.Monad.Writer
+import Data.Maybe (
+	isNothing)
 import System (
 	getArgs)
 import System.IO (
@@ -12,6 +14,7 @@ import System.IO (
 	putStrLn, 
 	openFile, 
 	hSetBuffering, 
+	hGetEncoding,
 	hSetEncoding,
 	utf8,
 	BufferMode(BlockBuffering), 
@@ -70,15 +73,21 @@ processFilePath :: FilePath -> WriterT [String] IO [String]
 processFilePath filePath = do
 	tell ["Processing file path: " ++ filePath]
 	handle <- lift $ openFile filePath ReadMode
-	lift $ hSetBuffering handle $ BlockBuffering (Just 2048)
-	lift $ hSetEncoding handle utf8
-	lines <- processHandle handle
-	lift $ hClose handle
-	return lines
+	encoding <- lift $ hGetEncoding handle
+	if isNothing encoding
+		then do
+			tell ["Skipping binary file: " ++ filePath]
+			return []
+		else do
+			lines <- processHandle handle
+			lift $ hClose handle
+			return lines
 
 processHandle :: Handle -> WriterT [String] IO [String]
 processHandle handle = do
 	tell ["Processing handle: " ++ (show handle)]
+	lift $ hSetBuffering handle $ BlockBuffering (Just 2048)
+	lift $ hSetEncoding handle utf8
 	lines <- readLines handle
 	lift $ mapM_ putStrLn lines
 	return lines
