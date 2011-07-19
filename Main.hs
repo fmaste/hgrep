@@ -67,6 +67,7 @@ processPath path = do
 					then processDirPath path 
 					else do
 						lines <- processFilePath path 
+						lift $ mapM_ putStrLn lines
 						return [lines]
 
 processDirPath :: FilePath -> WriterT [String] IO DirectoryContent
@@ -89,7 +90,6 @@ processFilePath filePath = do
 			return []
 		else processHandle handle
 	lift $ hClose handle
-	lift $ mapM_ putStrLn lines
 	return lines
 
 processHandle :: Handle -> WriterT [String] IO FileContent
