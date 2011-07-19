@@ -82,10 +82,12 @@ processHandle handle = do
 readLines :: Handle -> WriterT [String] IO [String]
 readLines handle = do
 	isEOF <- lift $ hIsEOF handle
-	if isEOF then return [] else do
-		head' <- readLine handle
-		tail' <- readLines handle
-		return $ head' : tail'
+	if isEOF 
+		then return [] 
+		else do
+			head' <- readLine handle
+			tail' <- readLines handle
+			return $ head' : tail'
 
 readLine :: Handle -> WriterT [String] IO String
 readLine handle = do
