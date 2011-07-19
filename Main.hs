@@ -33,7 +33,7 @@ import System.Directory (
 	doesDirectoryExist, 
 	getDirectoryContents)
 
-type FileLine = String
+type FileLine = (Int, String)
 type FileContent = [FileLine]
 type DirectoryContent = [FileContent]
 
@@ -71,7 +71,7 @@ processPath path = do
 					then processDirPath path 
 					else do
 						lines <- processFilePath path 
-						lift $ mapM_ putStrLn lines
+						lift $ mapM_ (\(num,text) -> putStrLn text) lines
 						return [lines]
 
 processDirPath :: FilePath -> WriterT [String] IO DirectoryContent
@@ -117,5 +117,5 @@ readLines handle = do
 readLine :: Handle -> WriterT [String] IO FileLine
 readLine handle = do
 	line <- lift $ hGetLine handle
-	return line
+	return (0, line)
 
