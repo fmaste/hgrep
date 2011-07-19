@@ -31,6 +31,7 @@ import System.Directory (
 
 type FileLine = String
 type FileContent = [FileLine]
+type DirectoryContent = [FileContent]
 
 main :: IO ()
 main = do
@@ -47,7 +48,7 @@ main = do
 			mapM_ putStrLn log
 			return ()
 
-processPath :: FilePath -> WriterT [String] IO [FileContent]
+processPath :: FilePath -> WriterT [String] IO DirectoryContent
 processPath path = do
 	tell ["Processing path: " ++ path]
 	isDir <- lift $ doesDirectoryExist path
@@ -68,7 +69,7 @@ processPath path = do
 						lines <- processFilePath path 
 						return [lines]
 
-processDirPath :: FilePath -> WriterT [String] IO [FileContent]
+processDirPath :: FilePath -> WriterT [String] IO DirectoryContent
 processDirPath dirPath = do
 	tell ["Processing dir path: " ++ dirPath]
 	paths <- lift $ getDirectoryContents dirPath
