@@ -47,28 +47,33 @@ main = do
 			mapM_ putStrLn log
 			return ()
 
-processPath :: FilePath -> WriterT [String] IO ()
+processPath :: FilePath -> WriterT [String] IO [FileContent]
 processPath path = do
 	tell ["Processing path: " ++ path]
 	isDir <- lift $ doesDirectoryExist path
 	isFile <- lift $ doesFileExist path
 	if not $ isDir || isFile
-		then tell [path ++ " does not exists"]
+		then do
+			tell [path ++ " does not exists"]
+			return []
 		else do
 			perms <- lift $ getPermissions path
 			if not $ readable perms
-				then tell [path ++ " has no read permission"]
+				then do
+					tell [path ++ " has no read permission"]
+					return []
 				else if isDir 
 					then processDirPath path 
 					else do
 						lines <- processFilePath path 
-						return ()
+						return [lines]
 
-processDirPath :: FilePath -> WriterT [String] IO ()
+processDirPath :: FilePath -> WriterT [String] IO [FileContent]
 processDirPath dirPath = do
 	tell ["Processing dir path: " ++ dirPath]
 	paths <- lift $ getDirectoryContents dirPath
-	sequence_  $ map processPath $ map ((dirPath ++ "/") ++) $ filter (flip notElem [".", ".."]) paths
+	dirContentsList <- sequence $ map processPath $ map ((dirPath ++ "/") ++) $ filter (flip notElem [".", ".."]) paths
+	return $ concat dirContentsList
 
 processFilePath :: FilePath -> WriterT [String] IO FileContent
 processFilePath filePath = do
