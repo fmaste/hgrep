@@ -75,14 +75,15 @@ processFilePath filePath = do
 processHandle :: Handle -> WriterT [String] IO [String]
 processHandle handle = do
 	tell ["Processing handle: " ++ (show handle)]
-	readLines handle
+	lines <- readLines handle
+	lift $ mapM_ putStrLn lines
+	return lines
 
 readLines :: Handle -> WriterT [String] IO [String]
 readLines handle = do
 	isEOF <- lift $ hIsEOF handle
 	if isEOF then return [] else do
 		head' <- readLine handle
-		lift $ putStrLn head' -- TODO: Remove line printing!
 		tail' <- readLines handle
 		return $ head' : tail'
 
