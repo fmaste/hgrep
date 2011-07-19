@@ -74,14 +74,13 @@ processFilePath filePath = do
 	tell ["Processing file path: " ++ filePath]
 	handle <- lift $ openFile filePath ReadMode
 	encoding <- lift $ hGetEncoding handle
-	if isNothing encoding
+	lines <- if isNothing encoding
 		then do
 			tell ["Skipping binary file: " ++ filePath]
 			return []
-		else do
-			lines <- processHandle handle
-			lift $ hClose handle
-			return lines
+		else processHandle handle
+	lift $ hClose handle
+	return lines
 
 processHandle :: Handle -> WriterT [String] IO [String]
 processHandle handle = do
