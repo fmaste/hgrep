@@ -29,7 +29,8 @@ import System.Directory (
 	doesDirectoryExist, 
 	getDirectoryContents)
 
--- Writer monad
+type FileLine = String
+type FileContent = [FileLine]
 
 main :: IO ()
 main = do
@@ -69,7 +70,7 @@ processDirPath dirPath = do
 	paths <- lift $ getDirectoryContents dirPath
 	sequence_  $ map processPath $ map ((dirPath ++ "/") ++) $ filter (flip notElem [".", ".."]) paths
 
-processFilePath :: FilePath -> WriterT [String] IO [String]
+processFilePath :: FilePath -> WriterT [String] IO FileContent
 processFilePath filePath = do
 	tell ["Processing file path: " ++ filePath]
 	handle <- lift $ openFile filePath ReadMode
@@ -82,7 +83,7 @@ processFilePath filePath = do
 	lift $ hClose handle
 	return lines
 
-processHandle :: Handle -> WriterT [String] IO [String]
+processHandle :: Handle -> WriterT [String] IO FileContent
 processHandle handle = do
 	tell ["Processing handle: " ++ (show handle)]
 	lift $ hSetBuffering handle $ BlockBuffering (Just 2048)
@@ -91,7 +92,7 @@ processHandle handle = do
 	lift $ mapM_ putStrLn lines
 	return lines
 
-readLines :: Handle -> WriterT [String] IO [String]
+readLines :: Handle -> WriterT [String] IO FileContent
 readLines handle = do
 	isEOF <- lift $ hIsEOF handle
 	if isEOF 
@@ -101,7 +102,7 @@ readLines handle = do
 			tail' <- readLines handle
 			return $ head' : tail'
 
-readLine :: Handle -> WriterT [String] IO String
+readLine :: Handle -> WriterT [String] IO FileLine
 readLine handle = do
 	line <- lift $ hGetLine handle
 	return line
