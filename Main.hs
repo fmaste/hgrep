@@ -3,6 +3,7 @@ module Main (
 ) where
 
 import Control.Monad
+-- TODO: Use liftIO from: import Control.Monad.IO.Class
 import Control.Monad.Writer
 import Data.Maybe (
 	isNothing)
