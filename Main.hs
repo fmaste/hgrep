@@ -89,6 +89,7 @@ processFilePath filePath = do
 			return []
 		else processHandle handle
 	lift $ hClose handle
+	lift $ mapM_ putStrLn lines
 	return lines
 
 processHandle :: Handle -> WriterT [String] IO FileContent
@@ -97,7 +98,6 @@ processHandle handle = do
 	lift $ hSetBuffering handle $ BlockBuffering (Just 2048)
 	lift $ hSetEncoding handle utf8
 	lines <- readLines handle
-	lift $ mapM_ putStrLn lines
 	return lines
 
 readLines :: Handle -> WriterT [String] IO FileContent
