@@ -54,7 +54,9 @@ processPath path = do
 				then tell [path ++ " has no read permission"]
 				else if isDir 
 					then processDirPath path 
-					else processFilePath path 
+					else do
+						lines <- processFilePath path 
+						return ()
 
 processDirPath :: FilePath -> WriterT [String] IO ()
 processDirPath dirPath = do
@@ -62,15 +64,14 @@ processDirPath dirPath = do
 	paths <- lift $ getDirectoryContents dirPath
 	sequence_  $ map processPath $ map ((dirPath ++ "/") ++) $ filter (flip notElem [".", ".."]) paths
 
-processFilePath :: FilePath -> WriterT [String] IO ()
+processFilePath :: FilePath -> WriterT [String] IO [String]
 processFilePath filePath = do
 	tell ["Processing file path: " ++ filePath]
 	handle <- lift $ openFile filePath ReadMode
 	lift $ hSetBuffering handle $ BlockBuffering (Just 2048)
 	lines <- processHandle handle
 	lift $ hClose handle
-	-- TODO: return lines
-	return ()
+	return lines
 
 processHandle :: Handle -> WriterT [String] IO [String]
 processHandle handle = do
