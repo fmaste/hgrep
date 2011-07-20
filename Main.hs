@@ -97,7 +97,7 @@ processPath path = do
 					then local (\r -> Directory path) (processDirPath path)
 					else do
 						lines <- processFilePath path 
-						liftIO $ mapM_ (\(num,text) -> putStrLn text) lines
+						--liftIO $ mapM_ (\(num,text) -> putStrLn text) lines
 						return [lines]
 
 processDirPath :: FilePath -> GrepMonad DirectoryContent
@@ -138,8 +138,8 @@ readLines handle = do
 
 readLine :: Handle -> GrepMonad FileLine
 readLine handle = do
-	lineStr <- liftIO $ hGetLine handle
 	position <- ask
 	let lineNumber = getLineNumber position
+	lineStr <- liftIO $ hGetLine handle
 	return (lineNumber, lineStr)
 
