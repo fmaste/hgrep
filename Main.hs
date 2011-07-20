@@ -106,12 +106,7 @@ processFilePath :: FilePath -> GrepMonad FileContent
 processFilePath filePath = do
 	tell ["Processing file path: " ++ filePath]
 	handle <- liftIO $ openFile filePath ReadMode
-	encoding <- liftIO $ hGetEncoding handle
-	lines <- if isNothing encoding
-		then do
-			tell ["Skipping binary file: " ++ filePath]
-			return []
-		else local (\x -> initialFilePosition filePath) (processHandle handle)
+	lines <- local (\x -> initialFilePosition filePath) (processHandle handle)
 	liftIO $ hClose handle
 	return lines
 
