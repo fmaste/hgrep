@@ -121,7 +121,9 @@ processHandle handle = do
 	tell ["Processing handle: " ++ (show handle)]
 	liftIO $ hSetBuffering handle $ BlockBuffering (Just 2048)
 	liftIO $ hSetEncoding handle utf8
+	tell ["Reading file until EOF"]
 	lines <- readLines handle
+	tell ["Finished reading file"]
 	return lines
 
 readLines :: Handle -> GrepMonad FileContent
