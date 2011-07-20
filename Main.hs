@@ -33,6 +33,7 @@ import System.Directory (
 	doesDirectoryExist, 
 	getDirectoryContents)
 
+data Position = Position Int
 type FileLine = (Int, String)
 type FileContent = [FileLine]
 type DirectoryContent = [FileContent]
@@ -40,17 +41,18 @@ type DirectoryContent = [FileContent]
 main :: IO ()
 main = do
 	args <- getArgs
-	if length args >= 1 
+	log <- if length args >= 1 
 		then do
-			(_, _, log) <- runRWST (processPath $ head args) 0 () -- Take the first argument as the path if there is one.
-			putStrLn "------ LOG ------"
-			mapM_ putStrLn log
-			return ()
+			-- Take the first argument as the path if there is one.
+			(_, _, log) <- runRWST (processPath $ head args) 0 ()
+			return log
 		else do
-			(_, _, log) <- runRWST (processHandle stdin) 0 () -- If no argument process stdin.
-			putStrLn "------ LOG ------"
-			mapM_ putStrLn log
-			return ()
+			-- If no argument process stdin.
+			(_, _, log) <- runRWST (processHandle stdin) 0 ()
+			return log
+	putStrLn "------ LOG ------"
+	mapM_ putStrLn log
+	return ()
 
 processPath :: FilePath -> RWST Int [String] () IO DirectoryContent
 processPath path = do
