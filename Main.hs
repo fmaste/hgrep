@@ -41,13 +41,9 @@ type GrepMonad a = RWST Position [String] () IO a
 
 type LineNumber = Int
 
-data Position = Position FilePath LineNumber
+data Position = None | Directory FilePath | File FilePath LineNumber
 
-initialPosition = Position "" 1
-
-initialFilePosition fp = Position fp 1
-
-incrementLineNumber (Position fp ln) = Position fp (ln + 1)
+incrementLineNumber (File fp ln) = File fp (ln + 1)
 
 -------------------------------------------------------------------------------
 
@@ -61,11 +57,11 @@ main = do
 	log <- if length args >= 1 
 		then do
 			-- Take the first argument as the path if there is one.
-			(_, _, log) <- runRWST (processPath $ head args) initialPosition ()
+			(_, _, log) <- runRWST (processPath $ head args) None ()
 			return log
 		else do
 			-- If no argument process stdin.
-			(_, _, log) <- runRWST (processHandle stdin) initialPosition ()
+			(_, _, log) <- runRWST (processHandle stdin) None ()
 			return log
 	putStrLn "------ LOG ------"
 	mapM_ putStrLn log
@@ -106,7 +102,7 @@ processFilePath :: FilePath -> GrepMonad FileContent
 processFilePath filePath = do
 	tell ["Processing file path: " ++ filePath]
 	handle <- liftIO $ openFile filePath ReadMode
-	lines <- local (\x -> initialFilePosition filePath) (processHandle handle)
+	lines <- local (\x -> File filePath 1) (processHandle handle)
 	liftIO $ hClose handle
 	return lines
 
