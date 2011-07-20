@@ -111,6 +111,7 @@ processPath path = do
 processDirPath :: FilePath -> GrepMonad DirectoryContent
 processDirPath dirPath = do
 	tell ["Processing dir path: " ++ dirPath]
+	-- TODO: Check errors!
 	paths <- liftIO $ getDirectoryContents dirPath
 	let filteredPaths =  map ((dirPath ++ "/") ++) $ filter (flip notElem [".", ".."]) paths
 	dirContentsList <- sequence $ map (\p -> local (\r -> Directory dirPath) (processPath p)) filteredPaths
@@ -119,15 +120,17 @@ processDirPath dirPath = do
 processFilePath :: FilePath -> GrepMonad FileContent
 processFilePath filePath = do
 	tell ["Processing file path: " ++ filePath]
+	-- TODO: Check error when opening.
 	handle <- liftIO $ openFile filePath ReadMode
 	lines <- local (\r -> File filePath 1) (processHandle handle)
+	-- TODO: At least log the closing error!
 	liftIO $ hClose handle
 	return lines
 
 processHandle :: Handle -> GrepMonad FileContent
 processHandle handle = do
 	tell ["Processing handle: " ++ (show handle)]
-	-- Only throws an error the handle was already used.
+	-- It may only throw an error if handle was already used.
 	liftIO $ hSetBuffering handle $ BlockBuffering (Just 2048)
 	-- May need to flush the handle, we are not checking for errors here.
 	liftIO $ hSetEncoding handle utf8
