@@ -39,10 +39,6 @@ type GrepMonad a = RWST Position Log () IO a
 
 -------------------------------------------------------------------------------
 
-type Log = [String]
-
--------------------------------------------------------------------------------
-
 type LineNumber = Integer
 
 data Position = Stdin LineNumber | Path FilePath | Directory FilePath | File FilePath LineNumber
@@ -52,6 +48,10 @@ incrementLineNumber (Stdin ln) = Stdin (ln + 1)
 
 getLineNumber (File _ ln) = ln
 getLineNumber (Stdin ln) = ln
+
+-------------------------------------------------------------------------------
+
+type Log = [String]
 
 -------------------------------------------------------------------------------
 
