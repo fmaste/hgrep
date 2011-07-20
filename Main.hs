@@ -33,8 +33,18 @@ import System.Directory (
 	doesDirectoryExist, 
 	getDirectoryContents)
 
-type GrepMonad a = RWST Int [String] () IO a
+-------------------------------------------------------------------------------
+
+type GrepMonad a = RWST Position [String] () IO a
+
+-------------------------------------------------------------------------------
+
 data Position = Position Int
+
+initialPosition = Position 0
+
+-------------------------------------------------------------------------------
+
 type FileLine = (Int, String)
 type FileContent = [FileLine]
 type DirectoryContent = [FileContent]
@@ -45,11 +55,11 @@ main = do
 	log <- if length args >= 1 
 		then do
 			-- Take the first argument as the path if there is one.
-			(_, _, log) <- runRWST (processPath $ head args) 0 ()
+			(_, _, log) <- runRWST (processPath $ head args) initialPosition ()
 			return log
 		else do
 			-- If no argument process stdin.
-			(_, _, log) <- runRWST (processHandle stdin) 0 ()
+			(_, _, log) <- runRWST (processHandle stdin) initialPosition ()
 			return log
 	putStrLn "------ LOG ------"
 	mapM_ putStrLn log
