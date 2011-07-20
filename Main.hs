@@ -7,7 +7,7 @@ import Control.Monad
 -- See: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=626985
 -- And: http://stackoverflow.com/questions/5252066/why-is-package-hidden-by-default-and-how-can-i-unhide-it
 import Control.Monad.IO.Class
-import Control.Monad.Writer
+import Control.Monad.Trans.RWS
 import Data.Maybe (
 	isNothing)
 import System (
@@ -42,27 +42,27 @@ main = do
 	args <- getArgs
 	if length args >= 1 
 		then do
-			log <- execWriterT $ processPath $ head args -- Take the first argument as the path if there is one.
+			(_, _, log) <- runRWST (processPath $ head args) 0 () -- Take the first argument as the path if there is one.
 			putStrLn "------ LOG ------"
 			mapM_ putStrLn log
 			return ()
 		else do
-			log <- execWriterT $ processHandle stdin -- If no argument process stdin.
+			(_, _, log) <- runRWST (processHandle stdin) 0 () -- If no argument process stdin.
 			putStrLn "------ LOG ------"
 			mapM_ putStrLn log
 			return ()
 
-processPath :: FilePath -> WriterT [String] IO DirectoryContent
+processPath :: FilePath -> RWST Int [String] () IO DirectoryContent
 processPath path = do
 	tell ["Processing path: " ++ path]
-	isDir <- lift $ doesDirectoryExist path
-	isFile <- lift $ doesFileExist path
+	isDir <- liftIO $ doesDirectoryExist path
+	isFile <- liftIO $ doesFileExist path
 	if not $ isDir || isFile
 		then do
 			tell [path ++ " does not exists"]
 			return []
 		else do
-			perms <- lift $ getPermissions path
+			perms <- liftIO $ getPermissions path
 			if not $ readable perms
 				then do
 					tell [path ++ " has no read permission"]
@@ -71,42 +71,42 @@ processPath path = do
 					then processDirPath path 
 					else do
 						lines <- processFilePath path 
-						lift $ mapM_ (\(num,text) -> putStrLn text) lines
+						liftIO $ mapM_ (\(num,text) -> putStrLn text) lines
 						return [lines]
 
-processDirPath :: FilePath -> WriterT [String] IO DirectoryContent
+processDirPath :: FilePath -> RWST Int [String] () IO DirectoryContent
 processDirPath dirPath = do
 	tell ["Processing dir path: " ++ dirPath]
-	paths <- lift $ getDirectoryContents dirPath
+	paths <- liftIO $ getDirectoryContents dirPath
 	dirContentsList <- sequence $ map processPath $ map ((dirPath ++ "/") ++) $ excludeDots paths
 	return $ concat dirContentsList
 
 excludeDots = filter (flip notElem [".", ".."])
 
-processFilePath :: FilePath -> WriterT [String] IO FileContent
+processFilePath :: FilePath -> RWST Int [String] () IO FileContent
 processFilePath filePath = do
 	tell ["Processing file path: " ++ filePath]
-	handle <- lift $ openFile filePath ReadMode
-	encoding <- lift $ hGetEncoding handle
+	handle <- liftIO $ openFile filePath ReadMode
+	encoding <- liftIO $ hGetEncoding handle
 	lines <- if isNothing encoding
 		then do
 			tell ["Skipping binary file: " ++ filePath]
 			return []
 		else processHandle handle
-	lift $ hClose handle
+	liftIO $ hClose handle
 	return lines
 
-processHandle :: Handle -> WriterT [String] IO FileContent
+processHandle :: Handle -> RWST Int [String] () IO FileContent
 processHandle handle = do
 	tell ["Processing handle: " ++ (show handle)]
-	lift $ hSetBuffering handle $ BlockBuffering (Just 2048)
-	lift $ hSetEncoding handle utf8
+	liftIO $ hSetBuffering handle $ BlockBuffering (Just 2048)
+	liftIO $ hSetEncoding handle utf8
 	lines <- readLines handle
 	return lines
 
-readLines :: Handle -> WriterT [String] IO FileContent
+readLines :: Handle -> RWST Int [String] () IO FileContent
 readLines handle = do
-	isEOF <- lift $ hIsEOF handle
+	isEOF <- liftIO $ hIsEOF handle
 	if isEOF 
 		then return [] 
 		else do
@@ -114,8 +114,8 @@ readLines handle = do
 			tail' <- readLines handle
 			return $ head' : tail'
 
-readLine :: Handle -> WriterT [String] IO FileLine
+readLine :: Handle -> RWST Int [String] () IO FileLine
 readLine handle = do
-	line <- lift $ hGetLine handle
+	line <- liftIO $ hGetLine handle
 	return (0, line)
 
