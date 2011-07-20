@@ -41,11 +41,11 @@ type GrepMonad a = RWST Position [String] () IO a
 
 type LineNumber = Int
 
-data Position = Position LineNumber
+data Position = Position FilePath LineNumber
 
-initialPosition = Position 1
+initialPosition = Position "" 1
 
-incrementLineNumber (Position ln) = Position (ln + 1)
+incrementLineNumber (Position fp ln) = Position fp (ln + 1)
 
 -------------------------------------------------------------------------------
 
