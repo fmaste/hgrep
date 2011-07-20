@@ -102,7 +102,7 @@ processFilePath :: FilePath -> GrepMonad FileContent
 processFilePath filePath = do
 	tell ["Processing file path: " ++ filePath]
 	handle <- liftIO $ openFile filePath ReadMode
-	lines <- local (\x -> File filePath 1) (processHandle handle)
+	lines <- local (\r -> File filePath 1) (processHandle handle)
 	liftIO $ hClose handle
 	return lines
 
