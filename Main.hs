@@ -138,6 +138,7 @@ processHandle handle = do
 
 readLines :: Handle -> GrepMonad FileContent
 readLines handle = do
+	-- Not checking errors here, if hIsEOF fails readLine should have failed before.
 	isEOF <- liftIO $ hIsEOF handle
 	if isEOF 
 		then return [] 
