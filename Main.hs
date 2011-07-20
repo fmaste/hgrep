@@ -98,7 +98,7 @@ processDirPath dirPath = do
 	tell ["Processing dir path: " ++ dirPath]
 	paths <- liftIO $ getDirectoryContents dirPath
 	let filteredPaths =  map ((dirPath ++ "/") ++) $ filter (flip notElem [".", ".."]) paths
-	dirContentsList <- sequence $ map processPath filteredPaths
+	dirContentsList <- sequence $ map (\p -> local (\r -> Directory dirPath) (processPath p)) filteredPaths
 	return $ concat dirContentsList
 
 processFilePath :: FilePath -> GrepMonad FileContent
