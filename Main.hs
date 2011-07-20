@@ -2,6 +2,7 @@ module Main (
 	main
 ) where
 
+import Control.OldException
 import Control.Monad
 -- "sudo ghc-pkg expose transformers" was needed.
 -- See: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=626985
@@ -9,7 +10,9 @@ import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Trans.RWS
 import Data.Maybe (
-	isNothing)
+	isNothing,
+	fromJust)
+import Data.Either
 import System (
 	getArgs)
 import System.IO (
@@ -45,6 +48,11 @@ data Position = Stdin LineNumber | Path FilePath | Directory FilePath | File Fil
 
 incrementLineNumber (File fp ln) = File fp (ln + 1)
 incrementLineNumber (Stdin ln) = Stdin (ln + 1)
+
+getFileName (Stdin _) = "Standard input"
+getFileName (Path fp) = fp
+getFileName (Directory fp) = fp
+getFileName (File fp _) = fp
 
 getLineNumber (File _ ln) = ln
 getLineNumber (Stdin ln) = ln
@@ -132,14 +140,25 @@ readLines handle = do
 	if isEOF 
 		then return [] 
 		else do
-			head' <- readLine handle
-			tail' <- local incrementLineNumber (readLines handle)
-			return $ head' : tail'
+			maybeHead <- readLine handle
+			if isNothing maybeHead
+				then do
+					tell ["Skipping file"]
+					return []
+				else do
+					tail' <- local incrementLineNumber (readLines handle)
+					return $ (fromJust maybeHead) : tail'
 
-readLine :: Handle -> GrepMonad FileLine
+readLine :: Handle -> GrepMonad (Maybe FileLine)
 readLine handle = do
 	position <- ask
 	let lineNumber = getLineNumber position
-	lineStr <- liftIO $ hGetLine handle
-	return (lineNumber, lineStr)
+	eitherLineStr <- liftIO $ try (hGetLine handle)
+	either (whenLeft lineNumber) (whenRight lineNumber) eitherLineStr where
+		whenLeft lineNumber e = do
+			tell ["Error reading line number " ++ (show lineNumber)]
+			tell ["Exception: " ++ (show e)]
+			return Nothing
+		whenRight lineNumber lineStr = do
+			return $ Just (lineNumber, lineStr)
 
