@@ -129,7 +129,7 @@ readLines handle = do
 
 readLine :: Handle -> GrepMonad FileLine
 readLine handle = do
-	line <- liftIO $ hGetLine handle
+	lineStr <- liftIO $ hGetLine handle
 	(File _ lineNumber) <- ask
-	return (lineNumber, line)
+	return (lineNumber, lineStr)
 
