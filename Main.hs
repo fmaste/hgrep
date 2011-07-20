@@ -43,7 +43,7 @@ type Log = [String]
 
 -------------------------------------------------------------------------------
 
-type LineNumber = Int
+type LineNumber = Integer
 
 data Position = None | Directory FilePath | File FilePath LineNumber
 
