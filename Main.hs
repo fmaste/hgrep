@@ -33,6 +33,7 @@ import System.Directory (
 	doesDirectoryExist, 
 	getDirectoryContents)
 
+type GrepMonad a = RWST Int [String] () IO a
 data Position = Position Int
 type FileLine = (Int, String)
 type FileContent = [FileLine]
@@ -54,7 +55,7 @@ main = do
 	mapM_ putStrLn log
 	return ()
 
-processPath :: FilePath -> RWST Int [String] () IO DirectoryContent
+processPath :: FilePath -> GrepMonad DirectoryContent
 processPath path = do
 	tell ["Processing path: " ++ path]
 	isDir <- liftIO $ doesDirectoryExist path
@@ -76,7 +77,7 @@ processPath path = do
 						liftIO $ mapM_ (\(num,text) -> putStrLn text) lines
 						return [lines]
 
-processDirPath :: FilePath -> RWST Int [String] () IO DirectoryContent
+processDirPath :: FilePath -> GrepMonad DirectoryContent
 processDirPath dirPath = do
 	tell ["Processing dir path: " ++ dirPath]
 	paths <- liftIO $ getDirectoryContents dirPath
@@ -85,7 +86,7 @@ processDirPath dirPath = do
 
 excludeDots = filter (flip notElem [".", ".."])
 
-processFilePath :: FilePath -> RWST Int [String] () IO FileContent
+processFilePath :: FilePath -> GrepMonad FileContent
 processFilePath filePath = do
 	tell ["Processing file path: " ++ filePath]
 	handle <- liftIO $ openFile filePath ReadMode
@@ -98,7 +99,7 @@ processFilePath filePath = do
 	liftIO $ hClose handle
 	return lines
 
-processHandle :: Handle -> RWST Int [String] () IO FileContent
+processHandle :: Handle -> GrepMonad FileContent
 processHandle handle = do
 	tell ["Processing handle: " ++ (show handle)]
 	liftIO $ hSetBuffering handle $ BlockBuffering (Just 2048)
@@ -106,7 +107,7 @@ processHandle handle = do
 	lines <- readLines handle
 	return lines
 
-readLines :: Handle -> RWST Int [String] () IO FileContent
+readLines :: Handle -> GrepMonad FileContent
 readLines handle = do
 	isEOF <- liftIO $ hIsEOF handle
 	if isEOF 
@@ -116,7 +117,7 @@ readLines handle = do
 			tail' <- readLines handle
 			return $ head' : tail'
 
-readLine :: Handle -> RWST Int [String] () IO FileLine
+readLine :: Handle -> GrepMonad FileLine
 readLine handle = do
 	line <- liftIO $ hGetLine handle
 	return (0, line)
