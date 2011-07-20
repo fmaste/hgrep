@@ -156,8 +156,7 @@ readLine handle = do
 	eitherLineStr <- liftIO $ try (hGetLine handle)
 	either (whenLeft lineNumber) (whenRight lineNumber) eitherLineStr where
 		whenLeft lineNumber e = do
-			tell ["Error reading line number " ++ (show lineNumber)]
-			tell ["Exception: " ++ (show e)]
+			tell ["Error reading line number " ++ (show lineNumber) ++ ": " ++ (show e)]
 			return Nothing
 		whenRight lineNumber lineStr = do
 			return $ Just (lineNumber, lineStr)
