@@ -127,6 +127,7 @@ processFilePath filePath = do
 processHandle :: Handle -> GrepMonad FileContent
 processHandle handle = do
 	tell ["Processing handle: " ++ (show handle)]
+	-- Only throws an error the handle was already used.
 	liftIO $ hSetBuffering handle $ BlockBuffering (Just 2048)
 	liftIO $ hSetEncoding handle utf8
 	tell ["Reading file until EOF"]
