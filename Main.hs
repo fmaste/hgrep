@@ -45,6 +45,8 @@ data Position = Position FilePath LineNumber
 
 initialPosition = Position "" 1
 
+initialFilePosition fp = Position fp 1
+
 incrementLineNumber (Position fp ln) = Position fp (ln + 1)
 
 -------------------------------------------------------------------------------
@@ -109,7 +111,7 @@ processFilePath filePath = do
 		then do
 			tell ["Skipping binary file: " ++ filePath]
 			return []
-		else processHandle handle
+		else local (\x -> initialFilePosition filePath) (processHandle handle)
 	liftIO $ hClose handle
 	return lines
 
