@@ -45,9 +45,13 @@ type Log = [String]
 
 type LineNumber = Integer
 
-data Position = None | Directory FilePath | File FilePath LineNumber
+data Position = Stdin LineNumber | Path FilePath | Directory FilePath | File FilePath LineNumber
 
 incrementLineNumber (File fp ln) = File fp (ln + 1)
+incrementLineNumber (Stdin ln) = Stdin (ln + 1)
+
+getLineNumber (File _ ln) = ln
+getLineNumber (Stdin ln) = ln
 
 -------------------------------------------------------------------------------
 
@@ -61,11 +65,12 @@ main = do
 	log <- if length args >= 1 
 		then do
 			-- Take the first argument as the path if there is one.
-			(_, _, log) <- runRWST (processPath $ head args) None ()
+			let path = head args
+			(_, _, log) <- runRWST (processPath $ path) (Path path) ()
 			return log
 		else do
 			-- If no argument process stdin.
-			(_, _, log) <- runRWST (processHandle stdin) None ()
+			(_, _, log) <- runRWST (processHandle stdin) (Stdin 1) ()
 			return log
 	putStrLn "------ LOG ------"
 	mapM_ putStrLn log
@@ -130,6 +135,7 @@ readLines handle = do
 readLine :: Handle -> GrepMonad FileLine
 readLine handle = do
 	lineStr <- liftIO $ hGetLine handle
-	(File _ lineNumber) <- ask
+	position <- ask
+	let lineNumber = getLineNumber position
 	return (lineNumber, lineStr)
 
