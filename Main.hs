@@ -51,7 +51,7 @@ incrementLineNumber (File fp ln) = File fp (ln + 1)
 
 -------------------------------------------------------------------------------
 
-type FileLine = (Int, String)
+type FileLine = (Integer, String)
 type FileContent = [FileLine]
 type DirectoryContent = [FileContent]
 
