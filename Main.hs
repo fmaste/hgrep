@@ -45,6 +45,8 @@ data Position = Position LineNumber
 
 initialPosition = Position 0
 
+incrementLineNumber (Position ln) = Position (ln + 1)
+
 -------------------------------------------------------------------------------
 
 type FileLine = (Int, String)
@@ -126,7 +128,7 @@ readLines handle = do
 		then return [] 
 		else do
 			head' <- readLine handle
-			tail' <- readLines handle
+			tail' <- local incrementLineNumber (readLines handle)
 			return $ head' : tail'
 
 readLine :: Handle -> GrepMonad FileLine
