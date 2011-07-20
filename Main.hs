@@ -92,7 +92,7 @@ processPath path = do
 					tell [path ++ " has no read permission"]
 					return []
 				else if isDir 
-					then processDirPath path 
+					then local (\r -> Directory path) (processDirPath path)
 					else do
 						lines <- processFilePath path 
 						liftIO $ mapM_ (\(num,text) -> putStrLn text) lines
