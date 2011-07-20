@@ -43,7 +43,7 @@ type LineNumber = Int
 
 data Position = Position LineNumber
 
-initialPosition = Position 0
+initialPosition = Position 1
 
 incrementLineNumber (Position ln) = Position (ln + 1)
 
