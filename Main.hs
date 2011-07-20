@@ -39,7 +39,9 @@ type GrepMonad a = RWST Position [String] () IO a
 
 -------------------------------------------------------------------------------
 
-data Position = Position Int
+type LineNumber = Int
+
+data Position = Position LineNumber
 
 initialPosition = Position 0
 
