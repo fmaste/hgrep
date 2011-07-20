@@ -143,7 +143,9 @@ readLines handle = do
 			maybeHead <- readLine handle
 			if isNothing maybeHead
 				then do
-					tell ["Skipping file"]
+					position <- ask
+					let fileName = getFileName position
+					tell ["Skipping file: " ++ (show fileName)]
 					return []
 				else do
 					tail' <- local incrementLineNumber (readLines handle)
