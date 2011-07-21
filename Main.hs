@@ -60,11 +60,11 @@ getFileName (Path fp) = fp
 getFileName (Directory fp) = fp
 getFileName (File fp _ _) = fp
 
-getLineNumber (File _ ln _) = ln
 getLineNumber (Stdin ln _) = ln
+getLineNumber (File _ ln _) = ln
 
-incrementLineNumber (File fp ln cl) = File fp (ln + 1) cl
 incrementLineNumber (Stdin ln cl) = Stdin (ln + 1) cl
+incrementLineNumber (File fp ln cl) = File fp (ln + 1) cl
 
 -------------------------------------------------------------------------------
 
