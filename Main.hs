@@ -75,7 +75,7 @@ main = do
 		then do
 			-- Take the first argument as the path if there is one.
 			let path = head args
-			(ans, _, log) <- runRWST (processPath $ path) (Path path) ()
+			(ans, _, log) <- runRWST processPath (Path path) ()
 			return (ans, log)
 		else do
 			-- If no argument process stdin.
@@ -87,8 +87,10 @@ main = do
 	--putStrLn (show ans)
 	return ()
 
-processPath :: FilePath -> GrepMonad DirectoryContent
-processPath path = do
+processPath :: GrepMonad DirectoryContent
+processPath = do
+	position <- ask
+	let path = getFileName position
 	tell ["Processing path: " ++ path]
 	isDir <- liftIO $ doesDirectoryExist path
 	isFile <- liftIO $ doesFileExist path
@@ -103,31 +105,35 @@ processPath path = do
 					tell [path ++ " has no read permission"]
 					return []
 				else if isDir 
-					then local (\r -> Directory path) (processDirPath path)
+					then local (\r -> Directory path) processDirPath
 					else do
-						lines <- processFilePath path 
+						lines <- processFilePath
 						--liftIO $ mapM_ (\(num,text) -> putStrLn text) lines
 						return [lines]
 
-processDirPath :: FilePath -> GrepMonad DirectoryContent
-processDirPath dirPath = do
+processDirPath :: GrepMonad DirectoryContent
+processDirPath = do
+	position <- ask
+	let dirPath = getFileName position
 	tell ["Processing dir path: " ++ dirPath]
 	-- TODO: Check errors!
 	paths <- liftIO $ getDirectoryContents dirPath
 	let filteredPaths =  map ((dirPath ++ "/") ++) $ filter (flip notElem [".", ".."]) paths
-	dirContentsList <- sequence $ map (\p -> local (\r -> Directory dirPath) (processPath p)) filteredPaths
+	dirContentsList <- sequence $ map (\p -> local (\r -> Path p) processPath) filteredPaths
 	return $ concat dirContentsList
 
-processFilePath :: FilePath -> GrepMonad FileContent
-processFilePath filePath = do
+processFilePath :: GrepMonad FileContent
+processFilePath = do
+	position <- ask
+	let filePath = getFileName position
 	tell ["Processing file path: " ++ filePath]
 	-- TODO: Check error when opening.
 	eitherHandle <- liftIO $ try (openFile filePath ReadMode)
-	either whenLeft whenRight eitherHandle where
-		whenLeft e = do
+	either (whenLeft filePath) (whenRight filePath) eitherHandle where
+		whenLeft filePath e = do
 			tell ["Unable to open file " ++ (show filePath) ++ ": " ++ (show e)]
 			return []
-		whenRight handle = do
+		whenRight filePath handle = do
 			lines <- local (\r -> File filePath 1) (processHandle handle)
 			-- TODO: At least log the closing error!
 			liftIO $ try (hClose handle)
