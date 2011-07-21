@@ -79,7 +79,7 @@ type Log = [String]
 -------------------------------------------------------------------------------
 
 type FileColumn = Char
-type FileLine = (Integer, [FileColumn])
+type FileLine = String
 type FileContent = [FileLine]
 type DirectoryContent = [FileContent]
 
@@ -193,7 +193,7 @@ readLine handle = do
 			return Nothing
 		whenRight lineNumber lineStr = do
 			fileColumns <- readColumns lineStr
-			return $ Just (lineNumber, fileColumns)
+			return $ Just fileColumns
 
 readColumns :: String -> GrepMonad String
 readColumns lineStr = do
