@@ -94,11 +94,13 @@ addChar :: Position -> Char -> State -> (State, Maybe Position)
 addChar pos char (State pattern len counts) = let 
 	((lastPos, lastPosCount), lastCounts) = foldr f ((pos, 0), []) $ zippy where
 		zippy = zip pattern counts
-		f (patternChar, (actualPos, actualPosCount)) ((accumPos, accumPosCount), accumCounts) = let 
-			accumPosCount' = if patternChar == char then (accumPosCount + 1) else accumPosCount
-			in ((actualPos, actualPosCount), accumCounts ++ [(accumPos, accumPosCount')])
+		f (patternChar, nextCount) ((actualPos, actualPosCount), accumCounts) = let 
+			actualPosCount' = if patternChar == char then (actualPosCount + 1) else actualPosCount
+			in (nextCount, (actualPos, actualPosCount'):accumCounts)
 	maybePos = if lastPosCount == len then (Just lastPos) else Nothing
 	in (State pattern len lastCounts, maybePos)
+
+-- addChar (Stdin 1 1) 'c' (initialState "caca")
 
 -------------------------------------------------------------------------------
 
