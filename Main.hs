@@ -78,7 +78,7 @@ type Log = [String]
 
 -------------------------------------------------------------------------------
 
-type State = ()
+type State = [Integer]
 
 -------------------------------------------------------------------------------
 
@@ -94,11 +94,11 @@ main = do
 		then do
 			-- Take the first argument as the path if there is one.
 			let path = head args
-			(ans, _, log) <- runRWST processPath (Path path) ()
+			(ans, _, log) <- runRWST processPath (Path path) []
 			return (ans, log)
 		else do
 			-- If no argument process stdin.
-			(ans, _, log) <- runRWST (processHandle stdin) initialStdinPosition ()
+			(ans, _, log) <- runRWST (processHandle stdin) initialStdinPosition []
 			return ([ans] ,log)
 	putStrLn "------ LOG ------"
 	mapM_ putStrLn log
