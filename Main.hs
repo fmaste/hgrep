@@ -66,6 +66,12 @@ getLineNumber (File _ ln _) = ln
 incrementLineNumber (Stdin ln cl) = Stdin (ln + 1) cl
 incrementLineNumber (File fp ln cl) = File fp (ln + 1) cl
 
+getColumnNumber (Stdin _ cl) = cl
+getColumnNumber (File _ _ cl) = cl
+
+incrementColumnNumber (Stdin ln cl) = Stdin ln (cl + 1)
+incrementColumnNumber (File fp ln cl) = File fp ln (cl + 1)
+
 -------------------------------------------------------------------------------
 
 type Log = [String]
