@@ -82,8 +82,8 @@ main = do
 			return ([ans] ,log)
 	putStrLn "------ LOG ------"
 	mapM_ putStrLn log
-	putStrLn "------ ANS ------"
-	putStrLn (show ans)
+	--putStrLn "------ ANS ------"
+	--putStrLn (show ans)
 	return ()
 
 processPath :: FilePath -> GrepMonad DirectoryContent
@@ -121,11 +121,16 @@ processFilePath :: FilePath -> GrepMonad FileContent
 processFilePath filePath = do
 	tell ["Processing file path: " ++ filePath]
 	-- TODO: Check error when opening.
-	handle <- liftIO $ openFile filePath ReadMode
-	lines <- local (\r -> File filePath 1) (processHandle handle)
-	-- TODO: At least log the closing error!
-	liftIO $ hClose handle
-	return lines
+	eitherHandle <- liftIO $ try (openFile filePath ReadMode)
+	either whenLeft whenRight eitherHandle where
+		whenLeft e = do
+			tell ["Unable to open file " ++ (show filePath) ++ ": " ++ (show e)]
+			return []
+		whenRight handle = do
+			lines <- local (\r -> File filePath 1) (processHandle handle)
+			-- TODO: At least log the closing error!
+			liftIO $ try (hClose handle)
+			return lines
 
 processHandle :: Handle -> GrepMonad FileContent
 processHandle handle = do
