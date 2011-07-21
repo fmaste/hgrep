@@ -78,10 +78,15 @@ type Log = [String]
 
 -------------------------------------------------------------------------------
 
-type State = [Integer]
+newtype State = State [Integer]
+	deriving Show
 
 initialState :: String -> State
-initialState pattern = map (\_ -> 0) pattern
+initialState pattern = State (map (\_ -> 0) pattern)
+
+addChar :: Char -> String -> State -> State
+addChar char pattern (State counts) = State $ map f $ zip pattern counts where
+	f (c, n) = if c == char then (n + 1) else n
 
 -------------------------------------------------------------------------------
 
