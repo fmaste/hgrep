@@ -9,6 +9,7 @@ import Control.Monad
 -- And: http://stackoverflow.com/questions/5252066/why-is-package-hidden-by-default-and-how-can-i-unhide-it
 import Control.Monad.IO.Class
 import Control.Monad.Trans.RWS
+import Control.Monad.Trans.Error
 import Data.Maybe (
 	isNothing,
 	fromJust)
