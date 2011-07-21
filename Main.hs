@@ -47,9 +47,6 @@ type LineNumber = Integer
 
 data Position = Stdin LineNumber | Path FilePath | Directory FilePath | File FilePath LineNumber
 
-incrementLineNumber (File fp ln) = File fp (ln + 1)
-incrementLineNumber (Stdin ln) = Stdin (ln + 1)
-
 getFileName (Stdin _) = "Standard input"
 getFileName (Path fp) = fp
 getFileName (Directory fp) = fp
@@ -57,6 +54,9 @@ getFileName (File fp _) = fp
 
 getLineNumber (File _ ln) = ln
 getLineNumber (Stdin ln) = ln
+
+incrementLineNumber (File fp ln) = File fp (ln + 1)
+incrementLineNumber (Stdin ln) = Stdin (ln + 1)
 
 -------------------------------------------------------------------------------
 
