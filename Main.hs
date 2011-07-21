@@ -209,6 +209,7 @@ readColumns lineStr = do
 readColumn :: Char -> GrepMonad Char
 readColumn columnChar = do
 	position <- ask
+	let fileName = getFileName position
 	let lineNumber = getLineNumber position
 	let columnNumber = getColumnNumber position
 	return columnChar
