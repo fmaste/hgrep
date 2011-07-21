@@ -78,7 +78,8 @@ type Log = [String]
 
 -------------------------------------------------------------------------------
 
-type FileLine = (Integer, String)
+type FileColumn = (Integer, Char)
+type FileLine = (Integer, [FileColumn])
 type FileContent = [FileLine]
 type DirectoryContent = [FileContent]
 
@@ -191,5 +192,21 @@ readLine handle = do
 			tell ["Error reading line number " ++ (show lineNumber) ++ ": " ++ (show e)]
 			return Nothing
 		whenRight lineNumber lineStr = do
-			return $ Just (lineNumber, lineStr)
+			fileColumns <- readColumns lineStr
+			return $ Just (lineNumber, fileColumns)
+
+readColumns :: String -> GrepMonad [FileColumn]
+readColumns lineStr = do
+	case lineStr of
+		[] -> return []
+		(x:xs) -> do
+			head' <- readColumn x
+			tail' <- local incrementColumnNumber (readColumns xs)
+			return $ head' : tail'
+
+readColumn :: Char -> GrepMonad FileColumn
+readColumn columnChar = do
+	position <- ask
+	let columnNumber = getColumnNumber position
+	return (columnNumber, columnChar)
 
