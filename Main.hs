@@ -87,18 +87,18 @@ data State = State String Integer [(Position, Integer)]
 initialState :: String -> State
 initialState pattern = let
 	lenInt = length pattern
-	counts = replicate (lenInt + 1) (Path "", 0)
+	counts = replicate lenInt (Path "", 0)
 	in State pattern (toInteger lenInt) counts
-{-
+
 addChar :: Position -> Char -> State -> (State, Maybe Position)
-addChar pos char (State pattern len counts) = 
-	let (lastPosCount, counts) = foldr f ((pos, 0), []) $ zip pattern counts where
-		f (patternChar, (startPos, count)) ((lastPos, lastCount), counts) = 
-
-
-		State $ map f $ zip pattern counts where
-	f (c, n) = if c == char then (n + 1) else n
--}
+addChar pos char (State pattern len counts) = let 
+	((lastPos, lastPosCount), lastCounts) = foldr f ((pos, 0), []) $ zippy where
+		zippy = zip pattern counts
+		f (patternChar, (actualPos, actualPosCount)) ((accumPos, accumPosCount), accumCounts) = let 
+			accumPosCount' = if patternChar == char then (accumPosCount + 1) else accumPosCount
+			in ((actualPos, actualPosCount), accumCounts ++ [(accumPos, accumPosCount')])
+	maybePos = if lastPosCount == len then (Just lastPos) else Nothing
+	in (State pattern len lastCounts, maybePos)
 
 -------------------------------------------------------------------------------
 
