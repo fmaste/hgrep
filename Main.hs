@@ -51,6 +51,7 @@ data Position = Stdin LineNumber ColumnNumber
 	| Path FilePath 
 	| Directory FilePath 
 	| File FilePath LineNumber ColumnNumber
+	deriving Show
 
 initialStdinPosition = Stdin 1 1
 initialFilePosition path = File path 1 1
@@ -78,15 +79,26 @@ type Log = [String]
 
 -------------------------------------------------------------------------------
 
-newtype State = State [Integer]
+-- The pattern, the pattern length and the array of (Position, Eq counts)
+data State = State String Integer [(Position, Integer)]
 	deriving Show
 
+-- Create an initial array with (Path "", 0)
 initialState :: String -> State
-initialState pattern = State (map (\_ -> 0) pattern)
+initialState pattern = let
+	lenInt = length pattern
+	counts = replicate (lenInt + 1) (Path "", 0)
+	in State pattern (toInteger lenInt) counts
+{-
+addChar :: Position -> Char -> State -> (State, Maybe Position)
+addChar pos char (State pattern len counts) = 
+	let (lastPosCount, counts) = foldr f ((pos, 0), []) $ zip pattern counts where
+		f (patternChar, (startPos, count)) ((lastPos, lastCount), counts) = 
 
-addChar :: Char -> String -> State -> State
-addChar char pattern (State counts) = State $ map f $ zip pattern counts where
+
+		State $ map f $ zip pattern counts where
 	f (c, n) = if c == char then (n + 1) else n
+-}
 
 -------------------------------------------------------------------------------
 
