@@ -80,6 +80,9 @@ type Log = [String]
 
 type State = [Integer]
 
+initialState :: String -> State
+initialState pattern = map (\_ -> 0) pattern
+
 -------------------------------------------------------------------------------
 
 type FileColumn = Char
@@ -94,11 +97,11 @@ main = do
 		then do
 			-- Take the first argument as the path if there is one.
 			let path = head args
-			(ans, _, log) <- runRWST processPath (Path path) []
+			(ans, _, log) <- runRWST processPath (Path path) (initialState "")
 			return (ans, log)
 		else do
 			-- If no argument process stdin.
-			(ans, _, log) <- runRWST (processHandle stdin) initialStdinPosition []
+			(ans, _, log) <- runRWST (processHandle stdin) initialStdinPosition (initialState "")
 			return ([ans] ,log)
 	putStrLn "------ LOG ------"
 	mapM_ putStrLn log
