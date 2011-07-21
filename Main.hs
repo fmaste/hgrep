@@ -52,6 +52,9 @@ data Position = Stdin LineNumber ColumnNumber
 	| Directory FilePath 
 	| File FilePath LineNumber ColumnNumber
 
+initialStdinPosition = Stdin 1 1
+initialFilePosition path = File path 1 1
+
 getFileName (Stdin _ _) = "Standard input"
 getFileName (Path fp) = fp
 getFileName (Directory fp) = fp
@@ -84,7 +87,7 @@ main = do
 			return (ans, log)
 		else do
 			-- If no argument process stdin.
-			(ans, _, log) <- runRWST (processHandle stdin) (Stdin 1 1) ()
+			(ans, _, log) <- runRWST (processHandle stdin) initialStdinPosition ()
 			return ([ans] ,log)
 	putStrLn "------ LOG ------"
 	mapM_ putStrLn log
@@ -139,7 +142,7 @@ processFilePath = do
 			tell ["Unable to open file " ++ (show filePath) ++ ": " ++ (show e)]
 			return []
 		whenRight filePath handle = do
-			lines <- local (\r -> File filePath 1 1) (processHandle handle)
+			lines <- local (\r -> initialFilePosition filePath) (processHandle handle)
 			-- TODO: At least log the closing error!
 			liftIO $ try (hClose handle)
 			return lines
