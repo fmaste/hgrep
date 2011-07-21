@@ -45,18 +45,23 @@ type GrepMonad a = RWST Position Log () IO a
 
 type LineNumber = Integer
 
-data Position = Stdin LineNumber | Path FilePath | Directory FilePath | File FilePath LineNumber
+type ColumnNumber = Integer
 
-getFileName (Stdin _) = "Standard input"
+data Position = Stdin LineNumber ColumnNumber 
+	| Path FilePath 
+	| Directory FilePath 
+	| File FilePath LineNumber ColumnNumber
+
+getFileName (Stdin _ _) = "Standard input"
 getFileName (Path fp) = fp
 getFileName (Directory fp) = fp
-getFileName (File fp _) = fp
+getFileName (File fp _ _) = fp
 
-getLineNumber (File _ ln) = ln
-getLineNumber (Stdin ln) = ln
+getLineNumber (File _ ln _) = ln
+getLineNumber (Stdin ln _) = ln
 
-incrementLineNumber (File fp ln) = File fp (ln + 1)
-incrementLineNumber (Stdin ln) = Stdin (ln + 1)
+incrementLineNumber (File fp ln cl) = File fp (ln + 1) cl
+incrementLineNumber (Stdin ln cl) = Stdin (ln + 1) cl
 
 -------------------------------------------------------------------------------
 
@@ -79,7 +84,7 @@ main = do
 			return (ans, log)
 		else do
 			-- If no argument process stdin.
-			(ans, _, log) <- runRWST (processHandle stdin) (Stdin 1) ()
+			(ans, _, log) <- runRWST (processHandle stdin) (Stdin 1 1) ()
 			return ([ans] ,log)
 	putStrLn "------ LOG ------"
 	mapM_ putStrLn log
@@ -134,7 +139,7 @@ processFilePath = do
 			tell ["Unable to open file " ++ (show filePath) ++ ": " ++ (show e)]
 			return []
 		whenRight filePath handle = do
-			lines <- local (\r -> File filePath 1) (processHandle handle)
+			lines <- local (\r -> File filePath 1 1) (processHandle handle)
 			-- TODO: At least log the closing error!
 			liftIO $ try (hClose handle)
 			return lines
