@@ -103,6 +103,7 @@ addChar actualPos addedChar (State pattern len counts _) = let
 	maybePos = if outEqs == len then (Just outPos) else Nothing
 	in (State pattern len ((actualPos, 0):(init outCounts)) maybePos)
 
+addChar' :: Position -> Char -> State -> State
 addChar' pos char (State pattern len counts _) = let 
 	((outPos, outPosCount), outCounts) = foldl f ((pos, 0), []) $ zippy where
 		zippy = zip pattern counts
@@ -111,6 +112,9 @@ addChar' pos char (State pattern len counts _) = let
 			in (nextCount, accumCounts ++ [(actualPos, actualPosCount')])
 	maybePos = if outPosCount == len then (Just outPos) else Nothing
 	in (State pattern len outCounts maybePos)
+
+getLastMatchedPosition :: State -> Maybe Position
+getLastMatchedPosition (State _ _ _ maybePos) = maybePos
 
 -- scanl (\state char -> addChar (Path "") char state) (initialState "lala") "lalala"
 
