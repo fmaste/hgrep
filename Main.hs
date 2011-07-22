@@ -257,15 +257,14 @@ readColumn :: Char -> GrepMonad Char
 readColumn columnChar = do
 	position <- ask
 	modify (addChar position columnChar)
-	checkMatch
-	return columnChar
-
-checkMatch :: GrepMonad ()
-checkMatch = do
 	maybePos <- gets getLastMatchedPosition
 	case maybePos of
 		Just pos -> tell ["Found in: " ++ (show pos)]
 		Nothing -> return ()
+	return columnChar
 
--- lalalala
+
+{-- la
+lalala
+--}
 
