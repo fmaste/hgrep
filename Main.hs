@@ -52,9 +52,14 @@ type LineNumber = Integer
 
 type ColumnNumber = Integer
 
-data Position = Path {fileName :: FilePath}
+data Position = 
+	-- A path to start processing.
+	Path {fileName :: FilePath}
+	-- A directory to traverse.
 	| Directory {fileName :: FilePath}
+	-- A file to parse.
 	| File {fileName :: FilePath, lineNumber :: LineNumber, columnNumber :: ColumnNumber}
+	-- From stdin.
 	| Stdin {lineNumber :: LineNumber, columnNumber :: ColumnNumber}
 	deriving Show
 
