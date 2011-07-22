@@ -10,6 +10,7 @@ import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Trans.RWS
 import Control.Monad.Trans.Error
+import Data.List
 import Data.Maybe (
 	isNothing,
 	fromJust)
@@ -94,7 +95,15 @@ resetState :: State -> State
 resetState (State pattern len _ _) = State pattern len (replicate (fromInteger len) (Path "", 0)) Nothing
 
 addChar :: Position -> Char -> State -> State
-addChar pos char (State pattern len counts _) = let 
+addChar actualPos addedChar (State pattern len counts _) = let 
+	((outPos, outEqs), outCounts) = mapAccumL f (Path "", 0) $ zip pattern counts where
+		f prevCount (patternChar, (initPos, eqsCount)) =
+			let eqsCount' = if patternChar == addedChar then (eqsCount + 1) else eqsCount
+			in ((initPos, eqsCount'), (initPos, eqsCount'))
+	maybePos = if outEqs == len then (Just outPos) else Nothing
+	in (State pattern len ((actualPos, 0):(init outCounts)) maybePos)
+
+addChar' pos char (State pattern len counts _) = let 
 	((outPos, outPosCount), outCounts) = foldl f ((pos, 0), []) $ zippy where
 		zippy = zip pattern counts
 		f ((actualPos, actualPosCount), accumCounts) (patternChar, nextCount) = let 
@@ -103,7 +112,7 @@ addChar pos char (State pattern len counts _) = let
 	maybePos = if outPosCount == len then (Just outPos) else Nothing
 	in (State pattern len outCounts maybePos)
 
--- addChar (Stdin 1 1) 'c' (initialState "caca")
+-- scanl (\state char -> addChar (Path "") char state) (initialState "lala") "lalala"
 
 -------------------------------------------------------------------------------
 
