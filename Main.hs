@@ -80,7 +80,7 @@ type Log = [String]
 -------------------------------------------------------------------------------
 
 -- The pattern, the pattern length and the array of (Position, Eq counts)
-data State = State String Integer [(Position, Integer)]
+data State = State String Integer [(Position, Integer)] (Maybe Position)
 	deriving Show
 
 -- Create an initial array with (Path "", 0)
@@ -88,20 +88,20 @@ initialState :: String -> State
 initialState pattern = let
 	lenInt = length pattern
 	counts = replicate lenInt (Path "", 0)
-	in State pattern (toInteger lenInt) counts
+	in State pattern (toInteger lenInt) counts Nothing
 
 resetState :: State -> State
-resetState (State pattern len counts) = State pattern len (replicate (fromInteger len) (Path "", 0))
+resetState (State pattern len _ _) = State pattern len (replicate (fromInteger len) (Path "", 0)) Nothing
 
 addChar :: Position -> Char -> State -> (State, Maybe Position)
-addChar pos char (State pattern len counts) = let 
+addChar pos char (State pattern len counts _) = let 
 	((outPos, outPosCount), outCounts) = foldl f ((pos, 0), []) $ zippy where
 		zippy = zip pattern counts
 		f ((actualPos, actualPosCount), accumCounts) (patternChar, nextCount) = let 
 			actualPosCount' = if patternChar == char then (actualPosCount + 1) else actualPosCount
 			in (nextCount, accumCounts ++ [(actualPos, actualPosCount')])
 	maybePos = if outPosCount == len then (Just outPos) else Nothing
-	in (State pattern len outCounts, maybePos)
+	in (State pattern len outCounts Nothing, maybePos)
 
 addChar' :: Position -> Char -> (State, Maybe Position) -> (State, Maybe Position)
 addChar' pos char (state, maybePos) = addChar pos char state
