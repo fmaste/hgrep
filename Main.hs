@@ -90,6 +90,9 @@ initialState pattern = let
 	counts = replicate lenInt (Path "", 0)
 	in State pattern (toInteger lenInt) counts
 
+resetState :: State -> State
+resetState (State pattern len counts) = State pattern len (replicate (fromInteger len) (Path "", 0))
+
 addChar :: Position -> Char -> State -> (State, Maybe Position)
 addChar pos char (State pattern len counts) = let 
 	((outPos, outPosCount), outCounts) = foldl f ((pos, 0), []) $ zippy where
