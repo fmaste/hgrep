@@ -101,16 +101,6 @@ addChar pos char (State pattern len counts _) = let
 			actualPosCount' = if patternChar == char then (actualPosCount + 1) else actualPosCount
 			in (nextCount, accumCounts ++ [(actualPos, actualPosCount')])
 	maybePos = if outPosCount == len then (Just outPos) else Nothing
-	in (State pattern len outCounts Nothing, maybePos)
-
-addChar' :: Position -> Char -> (State, Maybe Position) -> (State, Maybe Position)
-addChar' pos char (state, maybePos) = addChar pos char state
-
-test pattern test = let state = initialState pattern
-	in foldl f (state, []) test where
-		f (state, accum) char = 
-			let (state', maybePos) = addChar (Path "") char state
-			in (state', accum ++ [maybePos])
 
 -- addChar (Stdin 1 1) 'c' (initialState "caca")
 
