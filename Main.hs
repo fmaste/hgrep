@@ -105,24 +105,14 @@ resetState :: Position -> State -> State
 resetState pos (State pattern len _ _) = State pattern len (replicate (fromInteger len) (pos, 0)) Nothing
 
 addChar :: Position -> Char -> State -> State
-addChar actualPos addedChar (State pattern len counts _) = let 
-	((outPos, outEqs), outCounts) = mapAccumL f (Path "", 0) $ zip pattern counts where
-		f prevCount (patternChar, (initPos, eqsCount)) =
-			let eqsCount' = if patternChar == addedChar then (eqsCount + 1) else eqsCount
-			in ((initPos, eqsCount'), (initPos, eqsCount'))
-	maybePos = if outEqs == len then (Just outPos) else Nothing
-	in (State pattern len ((actualPos, 0):(init outCounts)) maybePos)
-
--- Old version!
-addChar' :: Position -> Char -> State -> State
-addChar' pos char (State pattern len counts _) = let 
-	((outPos, outPosCount), outCounts) = foldl f ((pos, 0), []) $ zippy where
-		zippy = zip pattern counts
-		f ((actualPos, actualPosCount), accumCounts) (patternChar, nextCount) = let 
-			actualPosCount' = if patternChar == char then (actualPosCount + 1) else actualPosCount
-			in (nextCount, accumCounts ++ [(actualPos, actualPosCount')])
-	maybePos = if outPosCount == len then (Just outPos) else Nothing
-	in (State pattern len outCounts maybePos)
+addChar addedPos addedChar (State pattern len counts _) = let 
+	outCounts = map f $ zip pattern ((addedPos, 0):counts) where
+		f (actualChar, (actualPos, actualEqs)) = 
+			let actualEqs' = if actualChar == addedChar then (actualEqs + 1) else actualEqs
+			in (actualPos, actualEqs')
+	(lastPos, lastEqs) = last outCounts
+	maybePos = if lastEqs == len then (Just lastPos) else Nothing
+	in (State pattern len (init outCounts) maybePos)
 
 getLastMatchedPosition :: State -> Maybe Position
 getLastMatchedPosition (State _ _ _ maybePos) = maybePos
