@@ -48,10 +48,10 @@ type LineNumber = Integer
 
 type ColumnNumber = Integer
 
-data Position = Stdin LineNumber ColumnNumber 
-	| Path FilePath 
-	| Directory FilePath 
-	| File FilePath LineNumber ColumnNumber
+data Position = Stdin {lineNumber :: LineNumber, columnNumber :: ColumnNumber}
+	| Path {fileName :: FilePath}
+	| Directory {fileName :: FilePath}
+	| File {fileName :: FilePath, lineNumber :: LineNumber, columnNumber :: ColumnNumber}
 	deriving Show
 
 initialStdinPosition = Stdin 1 1
