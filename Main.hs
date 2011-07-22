@@ -133,11 +133,11 @@ main = do
 		then do
 			-- Take the first argument as the path if there is one.
 			let path = head args
-			(ans, _, log) <- runRWST processPath (Path path) (initialState "")
+			(ans, _, log) <- runRWST processPath (Path path) (initialState "lala")
 			return (ans, log)
 		else do
 			-- If no argument process stdin.
-			(ans, _, log) <- runRWST (processHandle stdin) initialStdinPosition (initialState "")
+			(ans, _, log) <- runRWST (processHandle stdin) initialStdinPosition (initialState "lala")
 			return ([ans] ,log)
 	putStrLn "------ LOG ------"
 	mapM_ putStrLn log
@@ -229,6 +229,7 @@ readLine :: Handle -> GrepMonad (Maybe FileLine)
 readLine handle = do
 	position <- ask
 	let lineNumber = getLineNumber position
+	modify resetState
 	eitherLineStr <- liftIO $ try (hGetLine handle)
 	either (whenLeft lineNumber) (whenRight lineNumber) eitherLineStr where
 		whenLeft lineNumber e = do
@@ -253,5 +254,15 @@ readColumn :: Char -> GrepMonad Char
 readColumn columnChar = do
 	position <- ask
 	modify (addChar position columnChar)
+	checkMatch
 	return columnChar
+
+checkMatch :: GrepMonad ()
+checkMatch = do
+	maybePos <- gets getLastMatchedPosition
+	case maybePos of
+		Just pos -> tell ["Found in: " ++ (show pos)]
+		Nothing -> return ()
+
+-- lalalala
 
