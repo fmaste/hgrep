@@ -92,13 +92,22 @@ initialState pattern = let
 
 addChar :: Position -> Char -> State -> (State, Maybe Position)
 addChar pos char (State pattern len counts) = let 
-	((lastPos, lastPosCount), lastCounts) = foldr f ((pos, 0), []) $ zippy where
+	((lastPos, lastPosCount), lastCounts) = foldl f ((pos, 0), []) $ zippy where
 		zippy = zip pattern counts
-		f (patternChar, nextCount) ((actualPos, actualPosCount), accumCounts) = let 
+		f ((actualPos, actualPosCount), accumCounts) (patternChar, nextCount) = let 
 			actualPosCount' = if patternChar == char then (actualPosCount + 1) else actualPosCount
-			in (nextCount, (actualPos, actualPosCount'):accumCounts)
+			in (nextCount, accumCounts ++ [(actualPos, actualPosCount')])
 	maybePos = if lastPosCount == len then (Just lastPos) else Nothing
 	in (State pattern len lastCounts, maybePos)
+
+addChar' :: Position -> Char -> (State, Maybe Position) -> (State, Maybe Position)
+addChar' pos char (state, maybePos) = addChar pos char state
+
+test pattern test = let state = initialState pattern
+	in foldl f (state, []) test where
+		f (state, accum) char = 
+			let (state', maybePos) = addChar (Path "") char state
+			in (state', accum ++ [maybePos])
 
 -- addChar (Stdin 1 1) 'c' (initialState "caca")
 
