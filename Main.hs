@@ -184,7 +184,6 @@ processFilePath :: GrepMonad FileContent
 processFilePath = do
 	position <- ask
 	let filePath = getFileName position
-	tell ["Processing file path: " ++ filePath]
 	-- TODO: Check error when opening.
 	eitherHandle <- liftIO $ try (openFile filePath ReadMode)
 	either (whenLeft filePath) (whenRight filePath) eitherHandle where
@@ -199,7 +198,6 @@ processFilePath = do
 
 processHandle :: Handle -> GrepMonad FileContent
 processHandle handle = do
-	tell ["Processing handle: " ++ (show handle)]
 	-- It may only throw an error if handle was already used.
 	liftIO $ hSetBuffering handle $ BlockBuffering (Just 2048)
 	-- May need to flush the handle, we are not checking for errors here.
