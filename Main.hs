@@ -40,6 +40,10 @@ import System.Directory (
 
 -------------------------------------------------------------------------------
 
+-- The Grep Monad has:
+-- A Reader that allows to have as environment the actual position in a file.
+-- A Writer to log messages.
+-- A state with the parsing state machine.
 type GrepMonad a = RWST Position Log State IO a
 
 -------------------------------------------------------------------------------
