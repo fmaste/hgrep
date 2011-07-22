@@ -85,6 +85,11 @@ type Log = [String]
 
 -------------------------------------------------------------------------------
 
+data Action = NewFile Position
+	| NewLine Position
+	| NewChar Position Char
+	deriving Show
+
 -- The pattern, the pattern length and the array of (Position, Eq counts)
 data State = State String Integer [(Position, Integer)] (Maybe Position)
 	deriving Show
