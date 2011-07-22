@@ -55,6 +55,7 @@ data Position = Path {fileName :: FilePath}
 	deriving Show
 
 initialStdinPosition = Stdin 1 1
+
 initialFilePosition path = File path 1 1
 
 getFileName (Stdin _ _) = "Standard input"
