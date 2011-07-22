@@ -93,7 +93,7 @@ initialState pattern = let
 resetState :: State -> State
 resetState (State pattern len _ _) = State pattern len (replicate (fromInteger len) (Path "", 0)) Nothing
 
-addChar :: Position -> Char -> State -> (State, Maybe Position)
+addChar :: Position -> Char -> State -> State
 addChar pos char (State pattern len counts _) = let 
 	((outPos, outPosCount), outCounts) = foldl f ((pos, 0), []) $ zippy where
 		zippy = zip pattern counts
@@ -101,6 +101,7 @@ addChar pos char (State pattern len counts _) = let
 			actualPosCount' = if patternChar == char then (actualPosCount + 1) else actualPosCount
 			in (nextCount, accumCounts ++ [(actualPos, actualPosCount')])
 	maybePos = if outPosCount == len then (Just outPos) else Nothing
+	in (State pattern len outCounts maybePos)
 
 -- addChar (Stdin 1 1) 'c' (initialState "caca")
 
