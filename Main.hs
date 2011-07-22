@@ -232,7 +232,7 @@ readLine :: Handle -> GrepMonad (Maybe FileLine)
 readLine handle = do
 	position <- ask
 	let lineNumber = getLineNumber position
-	modify $ resetState position
+	--modify $ resetState position
 	eitherLineStr <- liftIO $ try (hGetLine handle)
 	either (whenLeft lineNumber) (whenRight lineNumber) eitherLineStr where
 		whenLeft lineNumber e = do
