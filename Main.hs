@@ -96,8 +96,8 @@ initialState pattern = let
 	counts = replicate lenInt (Path "", 0)
 	in State pattern (toInteger lenInt) counts Nothing
 
-resetState :: State -> State
-resetState (State pattern len _ _) = State pattern len (replicate (fromInteger len) (Path "", 0)) Nothing
+resetState :: Position -> State -> State
+resetState pos (State pattern len _ _) = State pattern len (replicate (fromInteger len) (pos, 0)) Nothing
 
 addChar :: Position -> Char -> State -> State
 addChar actualPos addedChar (State pattern len counts _) = let 
@@ -232,7 +232,7 @@ readLine :: Handle -> GrepMonad (Maybe FileLine)
 readLine handle = do
 	position <- ask
 	let lineNumber = getLineNumber position
-	modify resetState
+	modify $ resetState position
 	eitherLineStr <- liftIO $ try (hGetLine handle)
 	either (whenLeft lineNumber) (whenRight lineNumber) eitherLineStr where
 		whenLeft lineNumber e = do
