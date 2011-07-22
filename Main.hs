@@ -59,7 +59,7 @@ data Position =
 	| Directory {fileName :: FilePath}
 	-- A file to parse.
 	| File {fileName :: FilePath, lineNumber :: LineNumber, columnNumber :: ColumnNumber}
-	-- From stdin.
+	-- Parsing stdin.
 	| Stdin {lineNumber :: LineNumber, columnNumber :: ColumnNumber}
 	deriving Show
 
