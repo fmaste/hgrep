@@ -234,11 +234,11 @@ readLine handle = do
 	let lineNumber = getLineNumber position
 	--modify $ resetState position
 	eitherLineStr <- liftIO $ try (hGetLine handle)
-	either (whenLeft lineNumber) (whenRight lineNumber) eitherLineStr where
-		whenLeft lineNumber e = do
+	case eitherLineStr of
+		Left e -> do
 			tell ["Error reading line number " ++ (show lineNumber) ++ ": " ++ (show e)]
 			return Nothing
-		whenRight lineNumber lineStr = do
+		Right lineStr -> do
 			fileColumns <- readColumns lineStr
 			return $ Just fileColumns
 
