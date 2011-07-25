@@ -44,7 +44,7 @@ import System.Directory (
 -- A Reader that allows to have as environment the actual position in a file.
 -- A Writer to log messages.
 -- A state with the parsing state machine.
-type GrepMonad a = RWST Position Log State IO a
+type GrepM a = RWST Position Log State IO a
 
 -------------------------------------------------------------------------------
 
@@ -148,7 +148,7 @@ main = do
 	mapM_ putStrLn log
 	return ()
 
-processPath :: GrepMonad ()
+processPath :: GrepM ()
 processPath = do
 	position <- ask
 	let path = getFileName position
@@ -167,7 +167,7 @@ processPath = do
 					then local (\r -> Directory path) processDirPath
 					else processFilePath
 
-processDirPath :: GrepMonad ()
+processDirPath :: GrepM ()
 processDirPath = do
 	position <- ask
 	let dirPath = getFileName position
@@ -178,7 +178,7 @@ processDirPath = do
 	dirContentsList <- sequence $ map (\p -> local (\r -> Path p) processPath) filteredPaths
 	return ()
 
-processFilePath :: GrepMonad ()
+processFilePath :: GrepM ()
 processFilePath = do
 	position <- ask
 	let filePath = getFileName position
@@ -197,10 +197,10 @@ processFilePath = do
 			liftIO $ try (hClose handle)
 			return ()
 
-processHandle :: Handle -> GrepMonad ()
+processHandle :: Handle -> GrepM ()
 processHandle handle = do readLines handle
 
-readLines :: Handle -> GrepMonad ()
+readLines :: Handle -> GrepM ()
 readLines handle = do
 	-- Not checking errors here, if hIsEOF fails readLine should have failed before.
 	isEOF <- liftIO $ hIsEOF handle
@@ -214,7 +214,7 @@ readLines handle = do
 			else local incrementLineNumber (readLines handle)
 	return ()
 
-readLine :: Handle -> GrepMonad (Maybe ())
+readLine :: Handle -> GrepM (Maybe ())
 readLine handle = do
 	position <- ask
 	let lineNumber = getLineNumber position
@@ -228,11 +228,11 @@ readLine handle = do
 			readColumns lineStr
 			return $ Just ()
 
-readColumns :: String -> GrepMonad ()
+readColumns :: String -> GrepM ()
 readColumns [] = return ()
 readColumns (x:xs) = readColumn x >> local incrementColumnNumber (readColumns xs)
 
-readColumn :: Char -> GrepMonad ()
+readColumn :: Char -> GrepM ()
 readColumn columnChar = do
 	position <- ask
 	modify (addChar position columnChar)
