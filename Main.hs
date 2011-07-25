@@ -203,7 +203,7 @@ processFilePath = do
 			liftIO $ try (hClose handle)
 			return ()
 
-processHandle :: Handle -> GrepMonad ()
+processHandle :: Handle -> GrepM ()
 processHandle handle = readLines handle
 
 readLines :: Handle -> GrepM ()
