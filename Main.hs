@@ -188,19 +188,19 @@ processFilePath = do
 		whenLeft filePath e = do
 			liftIO $ putStrLn $ "Unable to open file " ++ (show filePath) ++ ": " ++ (show e)
 		whenRight filePath handle = do
-			lines <- local (\r -> initialFilePosition filePath) (processHandle handle)
+			local (\r -> initialFilePosition filePath) (processHandle handle)
 			-- TODO: At least log the closing error!
 			liftIO $ try (hClose handle)
 			return ()
 
-processHandle :: Handle -> GrepMonad FileContent
+processHandle :: Handle -> GrepMonad ()
 processHandle handle = do
 	-- It may only throw an error if handle was already used.
 	liftIO $ hSetBuffering handle $ BlockBuffering (Just 2048)
 	-- May need to flush the handle, we are not checking for errors here.
 	liftIO $ hSetEncoding handle utf8
-	lines <- readLines handle
-	return lines
+	readLines handle
+	return ()
 
 readLines :: Handle -> GrepMonad FileContent
 readLines handle = do
