@@ -45,7 +45,7 @@ import System.Directory (
 -- A Reader that allows to have as environment the actual position in a file.
 -- A Writer to log messages.
 -- A state with the parsing state machine.
-type GrepM a = RWST Position Log State IO a
+type GrepM = RWST Position Log State IO 
 
 -------------------------------------------------------------------------------
 
@@ -237,7 +237,7 @@ readColumn :: Char -> GrepM ()
 readColumn columnChar = do
 	position <- ask
 	modify (addChar position columnChar)
-	-- TODO: Leave the output onthe state or use the writer!
+	-- TODO: Leave the output on the state or use the writer!
 	maybePos <- gets getLastMatchedPosition
 	when (isJust maybePos) (tell ["Found in: " ++ (show $ fromJust maybePos)])
 
