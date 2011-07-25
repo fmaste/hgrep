@@ -244,8 +244,6 @@ readLine handle = do
 
 readColumns :: String -> GrepMonad String
 readColumns lineStr = do
-	position <- ask
-	let lineNumber = getLineNumber position
 	case lineStr of
 		[] -> return []
 		(x:xs) -> do
