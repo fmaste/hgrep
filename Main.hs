@@ -230,17 +230,16 @@ readLine handle = do
 			return $ Just ()
 
 readColumns :: String -> GrepMonad ()
-readColumns lineStr = do
-	case lineStr of
-		[] -> return ()
-		(x:xs) -> do
-			readColumn x
-			local incrementColumnNumber (readColumns xs)
+readColumns [] = return ()
+readColumns (x:xs) = do
+	readColumn x
+	local incrementColumnNumber (readColumns xs)
 
 readColumn :: Char -> GrepMonad ()
 readColumn columnChar = do
 	position <- ask
 	modify (addChar position columnChar)
+	-- TODO: Leave the output onthe state or use the writer!
 	maybePos <- gets getLastMatchedPosition
 	case maybePos of
 		Just pos -> tell ["Found in: " ++ (show pos)]
