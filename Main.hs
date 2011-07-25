@@ -171,7 +171,7 @@ processDirPath :: GrepMonad ()
 processDirPath = do
 	position <- ask
 	let dirPath = getFileName position
-	tell ["Processing dir path: " ++ dirPath]
+	liftIO $ putStrLn $ "Processing dir path: " ++ dirPath
 	-- TODO: Check errors!
 	paths <- liftIO $ getDirectoryContents dirPath
 	let filteredPaths =  map ((dirPath ++ "/") ++) $ filter (flip notElem [".", ".."]) paths
