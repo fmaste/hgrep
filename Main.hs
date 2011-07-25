@@ -4,14 +4,17 @@ module Main (
 
 import Control.OldException
 import Control.Monad
+import Control.Monad.IO.Class (liftIO)
 -- "sudo ghc-pkg expose transformers" was needed.
 -- See: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=626985
 -- And: http://stackoverflow.com/questions/5252066/why-is-package-hidden-by-default-and-how-can-i-unhide-it
-import Control.Monad.IO.Class
-import Control.Monad.Trans.RWS
+import Control.Monad.Trans.Reader
+import Control.Monad.Trans.Writer
+import Control.Monad.Trans.State
 import Control.Monad.Trans.Error
 import Data.List
 import Data.Maybe (
+	isJust,
 	isNothing,
 	fromJust)
 import Data.Either
@@ -44,7 +47,10 @@ import System.Directory (
 -- A Reader that allows to have as environment the actual position in a file.
 -- A Writer to log messages.
 -- A state with the parsing state machine.
-type GrepMonad a = RWST Position Log State IO a
+type GrepM a = ReaderT Position (ErrorT IOError (WriterT Log (StateT GrepState IO))) a
+
+runGrepM :: GrepM a -> Position -> GrepState -> IO ((Either IOError a, Log), GrepState)
+runGrepM gm pos state = runStateT (runWriterT (runErrorT (runReaderT gm pos))) state
 
 -------------------------------------------------------------------------------
 
@@ -96,31 +102,31 @@ data Action = NewFile Position
 	deriving Show
 
 -- The pattern, the pattern length and the array of (Position, Eq counts)
-data State = State String Integer [(Position, Integer)] (Maybe Position)
+data GrepState = GrepState String Integer [(Position, Integer)] (Maybe Position)
 	deriving Show
 
 -- Create an initial array with (Path "", 0)
-initialState :: String -> State
+initialState :: String -> GrepState
 initialState pattern = let
 	lenInt = length pattern
 	counts = replicate lenInt (Path "", 0)
-	in State pattern (toInteger lenInt) counts Nothing
+	in GrepState pattern (toInteger lenInt) counts Nothing
 
-resetState :: Position -> State -> State
-resetState pos (State pattern len _ _) = State pattern len (replicate (fromInteger len) (pos, 0)) Nothing
+resetState :: Position -> GrepState -> GrepState
+resetState pos (GrepState pattern len _ _) = GrepState pattern len (replicate (fromInteger len) (pos, 0)) Nothing
 
-addChar :: Position -> Char -> State -> State
-addChar addedPos addedChar (State pattern len counts _) = let 
+addChar :: Position -> Char -> GrepState -> GrepState
+addChar addedPos addedChar (GrepState pattern len counts _) = let 
 	outCounts = map f $ zip pattern ((addedPos, 0):counts) where
 		f (actualChar, (actualPos, actualEqs)) = 
 			let actualEqs' = if actualChar == addedChar then (actualEqs + 1) else actualEqs
 			in (actualPos, actualEqs')
 	(lastPos, lastEqs) = last outCounts
 	maybePos = if lastEqs == len then (Just lastPos) else Nothing
-	in (State pattern len (init outCounts) maybePos)
+	in (GrepState pattern len (init outCounts) maybePos)
 
-getLastMatchedPosition :: State -> Maybe Position
-getLastMatchedPosition (State _ _ _ maybePos) = maybePos
+getLastMatchedPosition :: GrepState -> Maybe Position
+getLastMatchedPosition (GrepState _ _ _ maybePos) = maybePos
 
 -- scanl (\state char -> addChar (Path "") char state) (initialState "lala") "lalala"
 
@@ -138,17 +144,17 @@ main = do
 		then do
 			-- Take the first argument as the path if there is one.
 			let path = head args
-			(_, _, log) <- runRWST processPath (Path path) (initialState "lala")
+			((_, log), _) <- runGrepM processPath (Path path) (initialState "lala")
 			return log
 		else do
 			-- If no argument process stdin.
-			(_, _, log) <- runRWST (processHandle stdin) initialStdinPosition (initialState "lala")
+			((_, log), _) <- runGrepM (processHandle stdin) initialStdinPosition (initialState "lala")
 			return log
 	putStrLn "------ LOG ------"
 	mapM_ putStrLn log
 	return ()
 
-processPath :: GrepMonad ()
+processPath :: GrepM ()
 processPath = do
 	position <- ask
 	let path = getFileName position
@@ -167,7 +173,7 @@ processPath = do
 					then local (\r -> Directory path) processDirPath
 					else processFilePath
 
-processDirPath :: GrepMonad ()
+processDirPath :: GrepM ()
 processDirPath = do
 	position <- ask
 	let dirPath = getFileName position
@@ -178,7 +184,7 @@ processDirPath = do
 	dirContentsList <- sequence $ map (\p -> local (\r -> Path p) processPath) filteredPaths
 	return ()
 
-processFilePath :: GrepMonad ()
+processFilePath :: GrepM ()
 processFilePath = do
 	position <- ask
 	let filePath = getFileName position
@@ -200,7 +206,7 @@ processFilePath = do
 processHandle :: Handle -> GrepMonad ()
 processHandle handle = readLines handle
 
-readLines :: Handle -> GrepMonad ()
+readLines :: Handle -> GrepM ()
 readLines handle = do
 	-- Not checking errors here, if hIsEOF fails readLine should have failed before.
 	isEOF <- liftIO $ hIsEOF handle
@@ -214,7 +220,7 @@ readLines handle = do
 			else local incrementLineNumber (readLines handle)
 	return ()
 
-readLine :: Handle -> GrepMonad (Maybe ())
+readLine :: Handle -> GrepM (Maybe ())
 readLine handle = do
 	position <- ask
 	let lineNumber = getLineNumber position
@@ -228,19 +234,17 @@ readLine handle = do
 			readColumns lineStr
 			return $ Just ()
 
-readColumns :: String -> GrepMonad ()
+readColumns :: String -> GrepM ()
 readColumns [] = return ()
 readColumns (x:xs) = readColumn x >> local incrementColumnNumber (readColumns xs)
 
-readColumn :: Char -> GrepMonad ()
+readColumn :: Char -> GrepM ()
 readColumn columnChar = do
 	position <- ask
 	modify (addChar position columnChar)
-	-- TODO: Leave the output onthe state or use the writer!
+	-- TODO: Leave the output on the state or use the writer!
 	maybePos <- gets getLastMatchedPosition
-	case maybePos of
-		Just pos -> tell ["Found in: " ++ (show pos)]
-		Nothing -> return ()
+	when (isJust maybePos) (tell ["Found in: " ++ (show $ fromJust maybePos)])
 
 {-- la
 lalala
