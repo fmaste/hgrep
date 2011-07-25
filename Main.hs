@@ -170,7 +170,7 @@ processPath = do
 				then liftIO $ putStrLn $ path ++ " has no read permission"
 				else if isDir 
 					then local (\r -> Directory path) processDirPath
-					else processFilePath
+					else processFilePath path
 
 processDirPath :: GrepM ()
 processDirPath = do
@@ -183,10 +183,8 @@ processDirPath = do
 	dirContentsList <- sequence $ map (\p -> local (\r -> Path p) processPath) filteredPaths
 	return ()
 
-processFilePath :: GrepM ()
-processFilePath = do
-	position <- ask
-	let filePath = getFileName position
+processFilePath :: FilePath -> GrepM ()
+processFilePath filePath = do
 	-- TODO: Check error when opening.
 	eitherHandle <- liftIO $ try (openFile filePath ReadMode)
 	either (whenLeft filePath) (whenRight filePath) eitherHandle where
@@ -200,6 +198,7 @@ processFilePath = do
 			local (\r -> initialFilePosition filePath) (processHandle handle)
 			-- TODO: At least log the closing error!
 			liftIO $ try (hClose handle)
+
 			return ()
 
 processHandle :: Handle -> GrepM ()
