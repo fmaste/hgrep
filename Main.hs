@@ -238,7 +238,6 @@ readColumns lineStr = do
 		(x:xs) -> do
 			readColumn x
 			local incrementColumnNumber (readColumns xs)
-			return ()
 
 readColumn :: Char -> GrepMonad ()
 readColumn columnChar = do
