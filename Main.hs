@@ -231,9 +231,7 @@ readLine handle = do
 
 readColumns :: String -> GrepMonad ()
 readColumns [] = return ()
-readColumns (x:xs) = do
-	readColumn x
-	local incrementColumnNumber (readColumns xs)
+readColumns (x:xs) = readColumn x >> local incrementColumnNumber (readColumns xs)
 
 readColumn :: Char -> GrepMonad ()
 readColumn columnChar = do
