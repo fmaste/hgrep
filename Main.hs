@@ -198,7 +198,7 @@ processFilePath = do
 			return ()
 
 processHandle :: Handle -> GrepMonad ()
-processHandle handle = do readLines handle
+processHandle handle = readLines handle
 
 readLines :: Handle -> GrepMonad ()
 readLines handle = do
