@@ -162,17 +162,10 @@ processPath = do
 		else do
 			perms <- liftIO $ getPermissions path
 			if not $ readable perms
-				then do
-					liftIO $ putStrLn $ path ++ " has no read permission"
-					return ()
+				then do liftIO $ putStrLn $ path ++ " has no read permission"
 				else if isDir 
-					then do
-						local (\r -> Directory path) processDirPath
-						return ()
-					else do
-						lines <- processFilePath
-						--liftIO $ mapM_ (\(num,text) -> putStrLn text) lines
-						return ()
+					then do local (\r -> Directory path) processDirPath
+					else do processFilePath
 
 processDirPath :: GrepMonad ()
 processDirPath = do
@@ -185,7 +178,7 @@ processDirPath = do
 	dirContentsList <- sequence $ map (\p -> local (\r -> Path p) processPath) filteredPaths
 	return ()
 
-processFilePath :: GrepMonad FileContent
+processFilePath :: GrepMonad ()
 processFilePath = do
 	position <- ask
 	let filePath = getFileName position
@@ -194,12 +187,11 @@ processFilePath = do
 	either (whenLeft filePath) (whenRight filePath) eitherHandle where
 		whenLeft filePath e = do
 			liftIO $ putStrLn $ "Unable to open file " ++ (show filePath) ++ ": " ++ (show e)
-			return []
 		whenRight filePath handle = do
 			lines <- local (\r -> initialFilePosition filePath) (processHandle handle)
 			-- TODO: At least log the closing error!
 			liftIO $ try (hClose handle)
-			return lines
+			return ()
 
 processHandle :: Handle -> GrepMonad FileContent
 processHandle handle = do
