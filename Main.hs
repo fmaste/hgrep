@@ -4,14 +4,17 @@ module Main (
 
 import Control.OldException
 import Control.Monad
-import Control.Monad.IO.Class (liftIO)
+import Control.Monad.IO.Class
+import Control.Monad.Reader
+import Control.Monad.Writer
+import Control.Monad.State
+import Control.Monad.Error
 -- "sudo ghc-pkg expose transformers" was needed.
 -- See: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=626985
 -- And: http://stackoverflow.com/questions/5252066/why-is-package-hidden-by-default-and-how-can-i-unhide-it
-import Control.Monad.Trans.Reader
-import Control.Monad.Trans.Writer
-import Control.Monad.Trans.State
-import Control.Monad.Trans.Error
+-- Also:
+-- sudo cabal upgrade transformers
+-- sudo cabal upgrade mtl
 import Data.List
 import Data.Maybe (
 	isJust,
@@ -47,6 +50,7 @@ import System.Directory (
 -- A Reader that allows to have as environment the actual position in a file.
 -- A Writer to log messages.
 -- A state with the parsing state machine.
+-- And finally, allows to handle errors.
 type GrepM a = ReaderT Position (ErrorT IOError (WriterT Log (StateT GrepState IO))) a
 
 runGrepM :: GrepM a -> Position -> GrepState -> IO ((Either IOError a, Log), GrepState)
