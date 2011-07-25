@@ -134,20 +134,18 @@ type DirectoryContent = [FileContent]
 main :: IO ()
 main = do
 	args <- getArgs
-	(ans, log) <- if length args >= 1 
+	log <- if length args >= 1 
 		then do
 			-- Take the first argument as the path if there is one.
 			let path = head args
-			(ans, _, log) <- runRWST processPath (Path path) (initialState "lala")
-			return (ans, log)
+			(_, _, log) <- runRWST processPath (Path path) (initialState "lala")
+			return log
 		else do
 			-- If no argument process stdin.
-			(ans, _, log) <- runRWST (processHandle stdin) initialStdinPosition (initialState "lala")
-			return ([ans] ,log)
+			(_, _, log) <- runRWST (processHandle stdin) initialStdinPosition (initialState "lala")
+			return log
 	putStrLn "------ LOG ------"
 	mapM_ putStrLn log
-	--putStrLn "------ ANS ------"
-	--putStrLn (show ans)
 	return ()
 
 processPath :: GrepMonad DirectoryContent
