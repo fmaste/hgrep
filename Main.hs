@@ -148,7 +148,7 @@ main = do
 	mapM_ putStrLn log
 	return ()
 
-processPath :: GrepMonad DirectoryContent
+processPath :: GrepMonad ()
 processPath = do
 	position <- ask
 	let path = getFileName position
@@ -158,21 +158,23 @@ processPath = do
 	if not $ isDir || isFile
 		then do
 			liftIO $ putStrLn $ path ++ " does not exists"
-			return []
+			return ()
 		else do
 			perms <- liftIO $ getPermissions path
 			if not $ readable perms
 				then do
 					liftIO $ putStrLn $ path ++ " has no read permission"
-					return []
+					return ()
 				else if isDir 
-					then local (\r -> Directory path) processDirPath
+					then do
+						local (\r -> Directory path) processDirPath
+						return ()
 					else do
 						lines <- processFilePath
 						--liftIO $ mapM_ (\(num,text) -> putStrLn text) lines
-						return [lines]
+						return ()
 
-processDirPath :: GrepMonad DirectoryContent
+processDirPath :: GrepMonad ()
 processDirPath = do
 	position <- ask
 	let dirPath = getFileName position
@@ -181,7 +183,7 @@ processDirPath = do
 	paths <- liftIO $ getDirectoryContents dirPath
 	let filteredPaths =  map ((dirPath ++ "/") ++) $ filter (flip notElem [".", ".."]) paths
 	dirContentsList <- sequence $ map (\p -> local (\r -> Path p) processPath) filteredPaths
-	return $ concat dirContentsList
+	return ()
 
 processFilePath :: GrepMonad FileContent
 processFilePath = do
