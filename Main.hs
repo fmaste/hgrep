@@ -136,11 +136,6 @@ getLastMatchedPosition (GrepState _ _ _ maybePos) = maybePos
 
 -------------------------------------------------------------------------------
 
-type FileColumn = Char
-type FileLine = String
-type FileContent = [FileLine]
-type DirectoryContent = [FileContent]
-
 main :: IO ()
 main = do
 	args <- getArgs
