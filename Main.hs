@@ -159,13 +159,13 @@ processPath = do
 	isFile <- liftIO $ doesFileExist path
 	if not $ isDir || isFile
 		then do
-			tell [path ++ " does not exists"]
+			liftIO $ putStrLn $ path ++ " does not exists"
 			return []
 		else do
 			perms <- liftIO $ getPermissions path
 			if not $ readable perms
 				then do
-					tell [path ++ " has no read permission"]
+					liftIO $ putStrLn $ path ++ " has no read permission"
 					return []
 				else if isDir 
 					then local (\r -> Directory path) processDirPath
@@ -193,7 +193,7 @@ processFilePath = do
 	eitherHandle <- liftIO $ try (openFile filePath ReadMode)
 	either (whenLeft filePath) (whenRight filePath) eitherHandle where
 		whenLeft filePath e = do
-			tell ["Unable to open file " ++ (show filePath) ++ ": " ++ (show e)]
+			liftIO $ putStrLn $ "Unable to open file " ++ (show filePath) ++ ": " ++ (show e)
 			return []
 		whenRight filePath handle = do
 			lines <- local (\r -> initialFilePosition filePath) (processHandle handle)
@@ -222,7 +222,7 @@ readLines handle = do
 				then do
 					position <- ask
 					let fileName = getFileName position
-					tell ["Skipping file: " ++ (show fileName)]
+					liftIO $ putStrLn $ "Skipping file: " ++ (show fileName)
 					return []
 				else do
 					tail' <- local incrementLineNumber (readLines handle)
@@ -236,7 +236,7 @@ readLine handle = do
 	eitherLineStr <- liftIO $ try (hGetLine handle)
 	case eitherLineStr of
 		Left e -> do
-			tell ["Error reading line number " ++ (show lineNumber) ++ ": " ++ (show e)]
+			liftIO $ putStrLn $ "Error reading line number " ++ (show lineNumber) ++ ": " ++ (show e)
 			return Nothing
 		Right lineStr -> do
 			fileColumns <- readColumns lineStr
@@ -260,7 +260,6 @@ readColumn columnChar = do
 		Just pos -> tell ["Found in: " ++ (show pos)]
 		Nothing -> return ()
 	return columnChar
-
 
 {-- la
 lalala
