@@ -12,6 +12,7 @@ import Control.Monad.Trans.RWS
 import Control.Monad.Trans.Error
 import Data.List
 import Data.Maybe (
+	isJust,
 	isNothing,
 	fromJust)
 import Data.Either
@@ -238,9 +239,8 @@ readColumn columnChar = do
 	modify (addChar position columnChar)
 	-- TODO: Leave the output onthe state or use the writer!
 	maybePos <- gets getLastMatchedPosition
-	case maybePos of
-		Just pos -> tell ["Found in: " ++ (show pos)]
-		Nothing -> return ()
+	when (isJust maybePos) (tell ["Found in: " ++ (show $ fromJust maybePos)])
+	return ()
 
 {-- la
 lalala
