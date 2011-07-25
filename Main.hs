@@ -228,8 +228,8 @@ readLine handle = do
 			liftIO $ putStrLn $ "Error reading line number " ++ (show lineNumber) ++ ": " ++ (show e)
 			return Nothing
 		Right lineStr -> do
-			fileColumns <- readColumns lineStr
-			return $ Just fileColumns
+			readColumns lineStr
+			return $ Just ()
 
 readColumns :: String -> GrepMonad ()
 readColumns lineStr = do
