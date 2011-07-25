@@ -240,7 +240,6 @@ readColumn columnChar = do
 	-- TODO: Leave the output onthe state or use the writer!
 	maybePos <- gets getLastMatchedPosition
 	when (isJust maybePos) (tell ["Found in: " ++ (show $ fromJust maybePos)])
-	return ()
 
 {-- la
 lalala
