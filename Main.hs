@@ -204,16 +204,15 @@ readLines :: Handle -> GrepMonad ()
 readLines handle = do
 	-- Not checking errors here, if hIsEOF fails readLine should have failed before.
 	isEOF <- liftIO $ hIsEOF handle
-	if isEOF 
-		then return ()
-		else do
-			maybeHead <- readLine handle
-			if isNothing maybeHead
-				then do
-					position <- ask
-					let fileName = getFileName position
-					liftIO $ putStrLn $ "Skipping file: " ++ (show fileName)
-				else local incrementLineNumber (readLines handle)
+	unless isEOF $ do
+		maybeHead <- readLine handle
+		if isNothing maybeHead
+			then do
+				position <- ask
+				let fileName = getFileName position
+				liftIO $ putStrLn $ "Skipping file: " ++ (show fileName)
+			else local incrementLineNumber (readLines handle)
+	return ()
 
 readLine :: Handle -> GrepMonad (Maybe ())
 readLine handle = do
