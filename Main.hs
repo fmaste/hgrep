@@ -217,7 +217,7 @@ readLines handle = do
 					liftIO $ putStrLn $ "Skipping file: " ++ (show fileName)
 				else local incrementLineNumber (readLines handle)
 
-readLine :: Handle -> GrepMonad (Maybe FileLine)
+readLine :: Handle -> GrepMonad (Maybe ())
 readLine handle = do
 	position <- ask
 	let lineNumber = getLineNumber position
@@ -231,16 +231,16 @@ readLine handle = do
 			fileColumns <- readColumns lineStr
 			return $ Just fileColumns
 
-readColumns :: String -> GrepMonad String
+readColumns :: String -> GrepMonad ()
 readColumns lineStr = do
 	case lineStr of
-		[] -> return []
+		[] -> return ()
 		(x:xs) -> do
-			head' <- readColumn x
-			tail' <- local incrementColumnNumber (readColumns xs)
-			return $ head' : tail'
+			readColumn x
+			local incrementColumnNumber (readColumns xs)
+			return ()
 
-readColumn :: Char -> GrepMonad Char
+readColumn :: Char -> GrepMonad ()
 readColumn columnChar = do
 	position <- ask
 	modify (addChar position columnChar)
@@ -248,7 +248,6 @@ readColumn columnChar = do
 	case maybePos of
 		Just pos -> tell ["Found in: " ++ (show pos)]
 		Nothing -> return ()
-	return columnChar
 
 {-- la
 lalala
