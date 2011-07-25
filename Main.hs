@@ -162,10 +162,10 @@ processPath = do
 		else do
 			perms <- liftIO $ getPermissions path
 			if not $ readable perms
-				then do liftIO $ putStrLn $ path ++ " has no read permission"
+				then liftIO $ putStrLn $ path ++ " has no read permission"
 				else if isDir 
-					then do local (\r -> Directory path) processDirPath
-					else do processFilePath
+					then local (\r -> Directory path) processDirPath
+					else processFilePath
 
 processDirPath :: GrepMonad ()
 processDirPath = do
