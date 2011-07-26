@@ -79,14 +79,25 @@ type Log = [String]
 -------------------------------------------------------------------------------
 
 data Action = 
-	Start Position
-	| MoveLine 
+	Start
+	| NewLine 
 	| AddChar Char
+	| End
 	deriving Show
 
 -- The pattern, the pattern length and the array of (Position, Eq counts)
 data GrepState = GrepState String Integer [(Position, Integer)] (Maybe Position)
 	deriving Show
+
+modifyState :: MonadIO m => Action -> GrepState -> GrepM m GrepState
+modifyState Start state = return state
+modifyState NewLine state = do
+	position <- ask
+	return $ resetState position state
+modifyState (AddChar char) state = do
+	position <- ask
+	return $ addChar position char state
+modifyState End state = return state
 
 -- Create an initial array with (File "", 0)
 initialState :: String -> GrepState
