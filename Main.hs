@@ -46,14 +46,16 @@ import System.Directory (
 
 -------------------------------------------------------------------------------
 
+type GrepError = String
+
 -- The Grep Monad has:
 -- A Reader that allows to have as environment the actual position in a file.
 -- A Writer to log messages.
 -- A state with the parsing state machine.
 -- And finally, allows to handle errors.
-type GrepM a = ReaderT Position (ErrorT IOError (WriterT Log (StateT GrepState IO))) a
+type GrepM a = ReaderT Position (ErrorT GrepError (WriterT Log (StateT GrepState IO))) a
 
-runGrepM :: GrepM a -> Position -> GrepState -> IO ((Either IOError a, Log), GrepState)
+runGrepM :: GrepM a -> Position -> GrepState -> IO ((Either GrepError a, Log), GrepState)
 runGrepM gm pos state = runStateT (runWriterT (runErrorT (runReaderT gm pos))) state
 
 -------------------------------------------------------------------------------
@@ -190,37 +192,35 @@ processFilePath filePath = do
 
 processHandle :: Handle -> Position -> GrepState -> IO ()
 processHandle handle position state = do
-	((_, log), _) <- runGrepM (readLines handle) position state
-	putStrLn "------ LOG ------"
+	((eitherAns, log), state) <- runGrepM (readLines handle) position state
+	case eitherAns of
+		Left e -> putStrLn e
+		Right a -> return ()
 	mapM_ putStrLn log
 
 readLines :: Handle -> GrepM ()
-readLines handle = do
-	-- Not checking errors here, if hIsEOF fails readLine should have failed before.
-	isEOF <- liftIO $ hIsEOF handle
-	unless isEOF $ do
-		maybeHead <- readLine handle
-		if isNothing maybeHead
-			then do
-				position <- ask
-				let fileName = getFileName position
-				liftIO $ putStrLn $ "Skipping file: " ++ (show fileName)
-			else local incrementLineNumber (readLines handle)
-	return ()
+readLines handle = 
+	(do 
+		-- Not checking errors here, if hIsEOF fails readLine should have failed before.
+		isEOF <- liftIO $ hIsEOF handle
+		unless isEOF $ readLine handle >> local incrementLineNumber (readLines handle))
+	`catchError` 
+	(\e -> do 
+		position <- ask
+		let fileName = getFileName position
+		throwError $ e ++ (". Skipping file " ++ (show fileName)))
 
-readLine :: Handle -> GrepM (Maybe ())
+readLine :: Handle -> GrepM ()
 readLine handle = do
-	position <- ask
-	let lineNumber = getLineNumber position
 	--modify $ resetState position
 	eitherLineStr <- liftIO $ try (hGetLine handle)
 	case eitherLineStr of
 		Left e -> do
-			liftIO $ putStrLn $ "Error reading line number " ++ (show lineNumber) ++ ": " ++ (show e)
-			return Nothing
+			position <- ask
+			let lineNumber = getLineNumber position
+			throwError $ "Error reading line number " ++ (show lineNumber) ++ ": " ++ (show e)
 		Right lineStr -> do
 			readColumns lineStr
-			return $ Just ()
 
 readColumns :: String -> GrepM ()
 readColumns [] = return ()
