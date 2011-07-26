@@ -36,12 +36,12 @@ type GrepError = String
 -- A state with the parsing state machine.
 -- And finally, allows to handle errors.
 -- All this inside the list monad to allow to generate multiple states from a parsing.
-type GrepM m a = ReaderT Position (ErrorT GrepError (WriterT Log (StateT GrepState (ListT m)))) a
+type GrepM m a = ReaderT Position (ErrorT GrepError (WriterT Log (StateT GrepState m))) a
 
-runGrepM :: Monad m => GrepM m a -> Position -> GrepState -> m [(Either GrepError a, Log, GrepState)]
+runGrepM :: Monad m => GrepM m a -> Position -> GrepState -> m (Either GrepError a, Log, GrepState)
 runGrepM gm pos state = do
-	ansList <- runListT (runStateT (runWriterT (runErrorT (runReaderT gm pos))) state)
-	return $ map (\((eitherAns, log), state) -> (eitherAns, log, state)) ansList
+	((eitherAns, log), state) <- runStateT (runWriterT (runErrorT (runReaderT gm pos))) state
+	return (eitherAns, log, state)
 
 -------------------------------------------------------------------------------
 
@@ -180,7 +180,7 @@ processFilePath filePath state = do
 
 processHandle :: Handle -> Position -> GrepState -> IO ()
 processHandle handle position state = do
-	((eitherAns, log, state):xs) <- runGrepM (readLines handle) position state
+	(eitherAns, log, state) <- runGrepM (readLines handle) position state
 	case eitherAns of
 		Left e -> hPutStrLn stderr e
 		Right a -> return ()
