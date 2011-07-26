@@ -141,22 +141,20 @@ main = do
 
 processPath :: FilePath -> GrepState -> IO ()
 processPath path state = do
-	putStrLn $ "Processing path: " ++ path
 	isDir <- doesDirectoryExist path
 	isFile <- doesFileExist path
 	if not $ isDir || isFile
-		then do putStrLn $ "File \"" ++ path ++ "\" does not exists"
+		then hPutStrLn stderr $ "Path \"" ++ path ++ "\" does not exists"
 		else do
 			perms <- getPermissions path
 			if not $ readable perms
-				then putStrLn $ path ++ " has no read permission"
+				then hPutStrLn stderr $ "Path \"" ++ path ++ "\" has no read permission"
 				else if isDir 
 					then processDirPath path state
 					else processFilePath path state
 
 processDirPath :: FilePath -> GrepState -> IO ()
 processDirPath dirPath state = do
-	putStrLn $ "Processing dir path: " ++ dirPath
 	-- TODO: Check errors!
 	paths <- getDirectoryContents dirPath
 	let filteredPaths =  map ((dirPath ++ "/") ++) $ filter (flip notElem [".", ".."]) paths
@@ -168,7 +166,7 @@ processFilePath filePath state = do
 	eitherHandle <- try $ openFile filePath ReadMode
 	either whenLeft whenRight eitherHandle where
 		whenLeft e = do
-			putStrLn $ "Unable to open file \"" ++ (show filePath) ++ "\": " ++ (show e)
+			hPutStrLn stderr $ "Unable to open file \"" ++ (show filePath) ++ "\": " ++ (show e)
 		whenRight handle = do
 			-- It may only throw an error if handle was already used.
 			hSetBuffering handle $ BlockBuffering (Just 2048)
@@ -183,7 +181,7 @@ processHandle :: Handle -> Position -> GrepState -> IO ()
 processHandle handle position state = do
 	((eitherAns, log, state):xs) <- runGrepM (readLines handle) position state
 	case eitherAns of
-		Left e -> putStrLn e
+		Left e -> hPutStrLn stderr e
 		Right a -> return ()
 	mapM_ putStrLn log
 
