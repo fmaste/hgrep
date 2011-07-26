@@ -9,6 +9,7 @@ import Control.Monad.Reader
 import Control.Monad.Writer
 import Control.Monad.State
 import Control.Monad.Error
+import Control.Monad.List
 -- "sudo ghc-pkg expose transformers" was needed.
 -- See: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=626985
 -- And: http://stackoverflow.com/questions/5252066/why-is-package-hidden-by-default-and-how-can-i-unhide-it
@@ -53,12 +54,13 @@ type GrepError = String
 -- A Writer to log messages.
 -- A state with the parsing state machine.
 -- And finally, allows to handle errors.
-type GrepM m a = ReaderT Position (ErrorT GrepError (WriterT Log (StateT GrepState m))) a
+-- All this inside the list monad to allow to generate multiple states from a parsing.
+type GrepM m a = ReaderT Position (ErrorT GrepError (WriterT Log (StateT GrepState (ListT m)))) a
 
-runGrepM :: Monad m => GrepM m a -> Position -> GrepState -> m (Either GrepError a, Log, GrepState)
+runGrepM :: Monad m => GrepM m a -> Position -> GrepState -> m [(Either GrepError a, Log, GrepState)]
 runGrepM gm pos state = do
-	((eitherAns, log), state) <- runStateT (runWriterT (runErrorT (runReaderT gm pos))) state
-	return (eitherAns, log, state)
+	ansList <- runListT (runStateT (runWriterT (runErrorT (runReaderT gm pos))) state)
+	return $ map (\((eitherAns, log), state) -> (eitherAns, log, state)) ansList
 
 -------------------------------------------------------------------------------
 
@@ -191,7 +193,7 @@ processFilePath filePath = do
 
 processHandle :: Handle -> Position -> GrepState -> IO ()
 processHandle handle position state = do
-	(eitherAns, log, state) <- runGrepM (readLines handle) position state
+	((eitherAns, log, state):xs) <- runGrepM (readLines handle) position state
 	case eitherAns of
 		Left e -> putStrLn e
 		Right a -> return ()
