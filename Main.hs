@@ -199,7 +199,9 @@ readLine handle = do
 			position <- ask
 			let fileName = getFileName position
 			let lineNumber = getLineNumber position
-			throwError $ "Skipping file \"" ++ fileName ++ "\", error reading line number " ++ (show lineNumber) ++ ": " ++ (show e)
+			throwError $ 
+				"Skipping file \"" ++ fileName ++ 
+				"\", error reading line number " ++ (show lineNumber) ++ ": " ++ (show e)
 		Right lineStr -> do
 			modifyState NewLine
 			readColumns lineStr
