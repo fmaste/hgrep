@@ -20,20 +20,7 @@ import Data.List
 import Data.Maybe
 import Data.Either
 import System
-import System.IO (
-	Handle,
-	stdin, 
-	putStrLn, 
-	openFile, 
-	hSetBuffering, 
-	hGetEncoding,
-	hSetEncoding,
-	utf8,
-	BufferMode(BlockBuffering), 
-	hClose, 
-	hIsEOF, 
-	hGetLine, 
-	IOMode(ReadMode))
+import System.IO
 import System.Directory
 
 -------------------------------------------------------------------------------
