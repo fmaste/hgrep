@@ -69,10 +69,8 @@ type LineNumber = Integer
 type ColumnNumber = Integer
 
 data Position = 
-	-- A path to start processing.
-	Path {fileName :: FilePath}
 	-- A file to parse.
-	| File {fileName :: FilePath, lineNumber :: LineNumber, columnNumber :: ColumnNumber}
+	File {fileName :: FilePath, lineNumber :: LineNumber, columnNumber :: ColumnNumber}
 	-- Parsing stdin.
 	| Stdin {lineNumber :: LineNumber, columnNumber :: ColumnNumber}
 	deriving Show
@@ -82,7 +80,6 @@ initialStdinPosition = Stdin 1 1
 initialFilePosition path = File path 1 1
 
 getFileName (Stdin _ _) = "Standard input"
-getFileName (Path fp) = fp
 getFileName (File fp _ _) = fp
 
 getLineNumber (Stdin ln _) = ln
@@ -112,11 +109,11 @@ data Action = NewFile Position
 data GrepState = GrepState String Integer [(Position, Integer)] (Maybe Position)
 	deriving Show
 
--- Create an initial array with (Path "", 0)
+-- Create an initial array with (File "", 0)
 initialState :: String -> GrepState
 initialState pattern = let
 	lenInt = length pattern
-	counts = replicate lenInt (Path "", 0)
+	counts = replicate lenInt (File "" 0 0, 0)
 	in GrepState pattern (toInteger lenInt) counts Nothing
 
 resetState :: Position -> GrepState -> GrepState
@@ -134,8 +131,6 @@ addChar addedPos addedChar (GrepState pattern len counts _) = let
 
 getLastMatchedPosition :: GrepState -> Maybe Position
 getLastMatchedPosition (GrepState _ _ _ maybePos) = maybePos
-
--- scanl (\state char -> addChar (Path "") char state) (initialState "lala") "lalala"
 
 -------------------------------------------------------------------------------
 
