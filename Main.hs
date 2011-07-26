@@ -17,10 +17,7 @@ import Control.OldException
 -- sudo cabal upgrade transformers
 -- sudo cabal upgrade mtl
 import Data.List
-import Data.Maybe (
-	isJust,
-	isNothing,
-	fromJust)
+import Data.Maybe
 import Data.Either
 import System (
 	getArgs)
