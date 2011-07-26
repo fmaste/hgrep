@@ -92,6 +92,7 @@ stateStep Start state = return state
 stateStep NewLine state = do
 	position <- ask
 	return $ resetState position state
+	-- return $ lift $ ListT [resetState position state, state]
 stateStep (AddChar char) state = do
 	position <- ask
 	let newState = addChar position char state
