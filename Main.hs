@@ -53,9 +53,9 @@ type GrepError = String
 -- A Writer to log messages.
 -- A state with the parsing state machine.
 -- And finally, allows to handle errors.
-type GrepM a = ReaderT Position (ErrorT GrepError (WriterT Log (StateT GrepState IO))) a
+type GrepM m a = ReaderT Position (ErrorT GrepError (WriterT Log (StateT GrepState m))) a
 
-runGrepM :: GrepM a -> Position -> GrepState -> IO (Either GrepError a, Log, GrepState)
+runGrepM :: Monad m => GrepM m a -> Position -> GrepState -> m (Either GrepError a, Log, GrepState)
 runGrepM gm pos state = do
 	((eitherAns, log), state) <- runStateT (runWriterT (runErrorT (runReaderT gm pos))) state
 	return (eitherAns, log, state)
@@ -197,13 +197,13 @@ processHandle handle position state = do
 		Right a -> return ()
 	mapM_ putStrLn log
 
-readLines :: Handle -> GrepM ()
+readLines :: Handle -> GrepM IO ()
 readLines handle = do 
 	-- Not checking errors here, if hIsEOF fails readLine should have failed before.
 	isEOF <- liftIO $ hIsEOF handle
 	unless isEOF $ readLine handle >> local incrementLineNumber (readLines handle)
 
-readLine :: Handle -> GrepM ()
+readLine :: Handle -> GrepM IO ()
 readLine handle = do
 	--modify $ resetState position
 	eitherLineStr <- liftIO $ try (hGetLine handle)
@@ -216,11 +216,11 @@ readLine handle = do
 		Right lineStr -> do
 			readColumns lineStr
 
-readColumns :: String -> GrepM ()
+readColumns :: String -> GrepM IO ()
 readColumns [] = return ()
 readColumns (x:xs) = readColumn x >> local incrementColumnNumber (readColumns xs)
 
-readColumn :: Char -> GrepM ()
+readColumn :: Char -> GrepM IO ()
 readColumn columnChar = do
 	position <- ask
 	modify (addChar position columnChar)
