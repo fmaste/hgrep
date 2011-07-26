@@ -1,3 +1,4 @@
+{-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances  #-}
 module Main (
 	main
 ) where
@@ -36,12 +37,51 @@ type GrepError = String
 -- A state with the parsing state machine.
 -- And finally, allows to handle errors.
 -- All this inside the list monad to allow to generate multiple states from a parsing.
-type GrepM m a = ReaderT Position (ErrorT GrepError (WriterT Log (StateT GrepState m))) a
+newtype GrepM m a = GrepM {runGrepM :: Position -> GrepState -> m (Either GrepError a, Log, GrepState)}
 
-runGrepM :: Monad m => GrepM m a -> Position -> GrepState -> m (Either GrepError a, Log, GrepState)
-runGrepM gm pos state = do
-	((eitherAns, log), state) <- runStateT (runWriterT (runErrorT (runReaderT gm pos))) state
-	return (eitherAns, log, state)
+instance Monad m => Monad (GrepM m) where
+    return a = GrepM (\_ s -> return (Right a, mempty, s))
+    m >>= f = GrepM $ \p s -> do
+	(err, w', s') <- runGrepM m p s
+	case (err, w', s') of
+		(Left e', _, _) -> return (Left e', w', s')
+		(Right a, _, _) -> do
+			(e'', w'', s'') <- runGrepM (f a) p s'
+			return (e'', mappend w' w'', s'')
+    fail str = GrepM $ \p s -> return (Left str, mempty, s)
+
+instance MonadTrans GrepM where
+	lift m = GrepM (\p s -> do
+		a <- m
+		return (Right a, mempty, s))
+
+instance Monad m => MonadReader Position (GrepM m) where
+	ask = GrepM $ (\p s -> return (Right p, mempty, s))
+	local f m = GrepM $ (\p s -> runGrepM m (f p) s)
+
+instance Monad m => MonadWriter Log (GrepM m) where
+	tell w = GrepM $ \_ s -> return (Right (), w, s)
+	listen m = GrepM $ \p s -> do
+		(Right a, w', s') <- runGrepM m p s
+		return (Right (a, w'), w', s')
+	pass m = GrepM $ \p s -> do
+		(Right (a, f), w', s') <- runGrepM m p s
+		return (Right a, f w', s')
+
+instance Monad m => MonadState GrepState (GrepM m) where
+	get = GrepM (\p s -> return (Right s, mempty, s))
+	put s = GrepM (\_ _ -> return (Right (), mempty, s))
+
+instance Monad m => MonadError GrepError (GrepM m) where
+	throwError e = GrepM (\p s -> return (Left e, mempty, s))
+	catchError m h = GrepM (\p s -> do
+		(err, w', s') <- runGrepM m p s
+		case err of
+			Left e -> runGrepM (h e) p s'
+			Right a -> return (Right a, w', s'))
+
+instance MonadIO m => MonadIO (GrepM m) where
+	liftIO = lift . liftIO
 
 -------------------------------------------------------------------------------
 
