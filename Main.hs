@@ -55,8 +55,10 @@ type GrepError = String
 -- And finally, allows to handle errors.
 type GrepM a = ReaderT Position (ErrorT GrepError (WriterT Log (StateT GrepState IO))) a
 
-runGrepM :: GrepM a -> Position -> GrepState -> IO ((Either GrepError a, Log), GrepState)
-runGrepM gm pos state = runStateT (runWriterT (runErrorT (runReaderT gm pos))) state
+runGrepM :: GrepM a -> Position -> GrepState -> IO (Either GrepError a, Log, GrepState)
+runGrepM gm pos state = do
+	((eitherAns, log), state) <- runStateT (runWriterT (runErrorT (runReaderT gm pos))) state
+	return (eitherAns, log, state)
 
 -------------------------------------------------------------------------------
 
@@ -189,7 +191,7 @@ processFilePath filePath = do
 
 processHandle :: Handle -> Position -> GrepState -> IO ()
 processHandle handle position state = do
-	((eitherAns, log), state) <- runGrepM (readLines handle) position state
+	(eitherAns, log, state) <- runGrepM (readLines handle) position state
 	case eitherAns of
 		Left e -> putStrLn e
 		Right a -> return ()
