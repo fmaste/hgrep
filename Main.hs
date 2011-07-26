@@ -139,66 +139,60 @@ getLastMatchedPosition (GrepState _ _ _ maybePos) = maybePos
 main :: IO ()
 main = do
 	args <- getArgs
-	log <- if length args >= 1 
+	if length args >= 1 
 		then do
 			-- Take the first argument as the path if there is one.
 			let path = head args
-			((_, log), _) <- runGrepM (processPath path) (Path path) (initialState "lala")
-			return log
+			processPath path
 		else do
 			-- If no argument process stdin.
-			((_, log), _) <- runGrepM (processHandle stdin) initialStdinPosition (initialState "lala")
-			return log
-	putStrLn "------ LOG ------"
-	mapM_ putStrLn log
-	return ()
+			processHandle stdin initialStdinPosition (initialState "lala")
 
-processPath :: FilePath -> GrepM ()
+processPath :: FilePath -> IO ()
 processPath path = do
-	tell ["Processing path: " ++ path]
-	isDir <- liftIO $ doesDirectoryExist path
-	isFile <- liftIO $ doesFileExist path
+	putStrLn $ "Processing path: " ++ path
+	isDir <- doesDirectoryExist path
+	isFile <- doesFileExist path
 	if not $ isDir || isFile
-		then do
-			liftIO $ putStrLn $ path ++ " does not exists"
-			return ()
+		then do putStrLn $ path ++ " does not exists"
 		else do
-			perms <- liftIO $ getPermissions path
+			perms <- getPermissions path
 			if not $ readable perms
-				then liftIO $ putStrLn $ path ++ " has no read permission"
+				then putStrLn $ path ++ " has no read permission"
 				else if isDir 
-					then local (\r -> Directory path) $ processDirPath path
+					then processDirPath path
 					else processFilePath path
 
-processDirPath :: FilePath -> GrepM ()
+processDirPath :: FilePath -> IO ()
 processDirPath dirPath = do
-	liftIO $ putStrLn $ "Processing dir path: " ++ dirPath
+	putStrLn $ "Processing dir path: " ++ dirPath
 	-- TODO: Check errors!
-	paths <- liftIO $ getDirectoryContents dirPath
+	paths <- getDirectoryContents dirPath
 	let filteredPaths =  map ((dirPath ++ "/") ++) $ filter (flip notElem [".", ".."]) paths
-	dirContentsList <- sequence $ map (\p -> local (\r -> Path p) (processPath p)) filteredPaths
+	dirContentsList <- sequence $ map (\p -> processPath p) filteredPaths
 	return ()
 
-processFilePath :: FilePath -> GrepM ()
+processFilePath :: FilePath -> IO ()
 processFilePath filePath = do
-	-- TODO: Check error when opening.
-	eitherHandle <- liftIO $ try (openFile filePath ReadMode)
+	eitherHandle <- try $ openFile filePath ReadMode
 	either (whenLeft filePath) (whenRight filePath) eitherHandle where
 		whenLeft filePath e = do
-			liftIO $ putStrLn $ "Unable to open file " ++ (show filePath) ++ ": " ++ (show e)
+			putStrLn $ "Unable to open file " ++ (show filePath) ++ ": " ++ (show e)
 		whenRight filePath handle = do
 			-- It may only throw an error if handle was already used.
-			liftIO $ hSetBuffering handle $ BlockBuffering (Just 2048)
+			hSetBuffering handle $ BlockBuffering (Just 2048)
 			-- May need to flush the handle, we are not checking for errors here.
-			liftIO $ hSetEncoding handle utf8
-			local (\r -> initialFilePosition filePath) (processHandle handle)
+			hSetEncoding handle utf8
+			processHandle handle (initialFilePosition filePath) (initialState "lala")
 			-- TODO: At least log the closing error!
-			liftIO $ try (hClose handle)
-
+			try $ hClose handle
 			return ()
 
-processHandle :: Handle -> GrepM ()
-processHandle handle = readLines handle
+processHandle :: Handle -> Position -> GrepState -> IO ()
+processHandle handle position state = do
+	((_, log), _) <- runGrepM (readLines handle) position state
+	putStrLn "------ LOG ------"
+	mapM_ putStrLn log
 
 readLines :: Handle -> GrepM ()
 readLines handle = do
