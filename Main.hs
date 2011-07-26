@@ -144,7 +144,7 @@ processPath path = do
 	isDir <- doesDirectoryExist path
 	isFile <- doesFileExist path
 	if not $ isDir || isFile
-		then do putStrLn $ path ++ " does not exists"
+		then do putStrLn $ "File \"" ++ path ++ "\" does not exists"
 		else do
 			perms <- getPermissions path
 			if not $ readable perms
@@ -167,7 +167,7 @@ processFilePath filePath = do
 	eitherHandle <- try $ openFile filePath ReadMode
 	either whenLeft whenRight eitherHandle where
 		whenLeft e = do
-			putStrLn $ "Unable to open file " ++ (show filePath) ++ ": " ++ (show e)
+			putStrLn $ "Unable to open file \"" ++ (show filePath) ++ "\": " ++ (show e)
 		whenRight handle = do
 			-- It may only throw an error if handle was already used.
 			hSetBuffering handle $ BlockBuffering (Just 2048)
