@@ -2,14 +2,14 @@ module Main (
 	main
 ) where
 
-import Control.OldException
 import Control.Monad
-import Control.Monad.IO.Class
-import Control.Monad.Reader
-import Control.Monad.Writer
-import Control.Monad.State
-import Control.Monad.Error
 import Control.Monad.List
+import Control.Monad.Error
+import Control.Monad.State
+import Control.Monad.Writer
+import Control.Monad.Reader
+import Control.Monad.IO.Class
+import Control.OldException
 -- "sudo ghc-pkg expose transformers" was needed.
 -- See: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=626985
 -- And: http://stackoverflow.com/questions/5252066/why-is-package-hidden-by-default-and-how-can-i-unhide-it
