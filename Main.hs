@@ -142,13 +142,10 @@ main :: IO ()
 main = do
 	args <- getArgs
 	if length args >= 1 
-		then do
-			-- Take the first argument as the path if there is one.
-			let path = head args
-			processPath path
-		else do
-			-- If no argument process stdin.
-			processHandle stdin initialStdinPosition (initialState "lala")
+		-- Take the first argument as the path if there is one.
+		then processPath (head args)
+		-- If no argument process stdin.
+		else processHandle stdin initialStdinPosition (initialState "lala")
 
 processPath :: FilePath -> IO ()
 processPath path = do
