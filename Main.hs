@@ -197,13 +197,13 @@ processHandle handle position state = do
 		Right a -> return ()
 	mapM_ putStrLn log
 
-readLines :: Handle -> GrepM IO ()
+readLines :: MonadIO m => Handle -> GrepM m ()
 readLines handle = do 
 	-- Not checking errors here, if hIsEOF fails readLine should have failed before.
 	isEOF <- liftIO $ hIsEOF handle
 	unless isEOF $ readLine handle >> local incrementLineNumber (readLines handle)
 
-readLine :: Handle -> GrepM IO ()
+readLine :: MonadIO m => Handle -> GrepM m ()
 readLine handle = do
 	--modify $ resetState position
 	eitherLineStr <- liftIO $ try (hGetLine handle)
@@ -216,11 +216,11 @@ readLine handle = do
 		Right lineStr -> do
 			readColumns lineStr
 
-readColumns :: String -> GrepM IO ()
+readColumns :: MonadIO m => String -> GrepM m ()
 readColumns [] = return ()
 readColumns (x:xs) = readColumn x >> local incrementColumnNumber (readColumns xs)
 
-readColumn :: Char -> GrepM IO ()
+readColumn :: MonadIO m => Char -> GrepM m ()
 readColumn columnChar = do
 	position <- ask
 	modify (addChar position columnChar)
