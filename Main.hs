@@ -169,13 +169,11 @@ processPath = do
 			if not $ readable perms
 				then liftIO $ putStrLn $ path ++ " has no read permission"
 				else if isDir 
-					then local (\r -> Directory path) processDirPath
+					then local (\r -> Directory path) $ processDirPath path
 					else processFilePath path
 
-processDirPath :: GrepM ()
-processDirPath = do
-	position <- ask
-	let dirPath = getFileName position
+processDirPath :: FilePath -> GrepM ()
+processDirPath dirPath = do
 	liftIO $ putStrLn $ "Processing dir path: " ++ dirPath
 	-- TODO: Check errors!
 	paths <- liftIO $ getDirectoryContents dirPath
