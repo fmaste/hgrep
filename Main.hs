@@ -131,14 +131,16 @@ getLastMatchedPosition (GrepState _ _ _ maybePos) = maybePos
 main :: IO ()
 main = do
 	args <- getArgs
-	if length args >= 1 
+	-- TODO: when (length args < 1) $ throw "No string search pattern"
+	let state = initialState $ head args
+	if length args >= 2 
 		-- Take the first argument as the path if there is one.
-		then processPath (head args)
+		then processPath (args !! 1) state
 		-- If no argument process stdin.
-		else processHandle stdin initialStdinPosition (initialState "lala")
+		else processHandle stdin initialStdinPosition state
 
-processPath :: FilePath -> IO ()
-processPath path = do
+processPath :: FilePath -> GrepState -> IO ()
+processPath path state = do
 	putStrLn $ "Processing path: " ++ path
 	isDir <- doesDirectoryExist path
 	isFile <- doesFileExist path
@@ -149,20 +151,20 @@ processPath path = do
 			if not $ readable perms
 				then putStrLn $ path ++ " has no read permission"
 				else if isDir 
-					then processDirPath path
-					else processFilePath path
+					then processDirPath path state
+					else processFilePath path state
 
-processDirPath :: FilePath -> IO ()
-processDirPath dirPath = do
+processDirPath :: FilePath -> GrepState -> IO ()
+processDirPath dirPath state = do
 	putStrLn $ "Processing dir path: " ++ dirPath
 	-- TODO: Check errors!
 	paths <- getDirectoryContents dirPath
 	let filteredPaths =  map ((dirPath ++ "/") ++) $ filter (flip notElem [".", ".."]) paths
-	dirContentsList <- sequence $ map (\p -> processPath p) filteredPaths
+	dirContentsList <- sequence $ map (\p -> processPath p state) filteredPaths
 	return ()
 
-processFilePath :: FilePath -> IO ()
-processFilePath filePath = do
+processFilePath :: FilePath -> GrepState -> IO ()
+processFilePath filePath state = do
 	eitherHandle <- try $ openFile filePath ReadMode
 	either whenLeft whenRight eitherHandle where
 		whenLeft e = do
@@ -172,7 +174,7 @@ processFilePath filePath = do
 			hSetBuffering handle $ BlockBuffering (Just 2048)
 			-- May need to flush the handle, we are not checking for errors here.
 			hSetEncoding handle utf8
-			processHandle handle (initialFilePosition filePath) (initialState "lala")
+			processHandle handle (initialFilePosition filePath) state
 			-- TODO: At least log the closing error!
 			try $ hClose handle
 			return ()
@@ -218,7 +220,10 @@ modifyState action = do
 	newState <- stateStep action state
 	put newState
 
-{-- la
+{-- 
+la
+lala
 lalala
+lalalala
 --}
 
