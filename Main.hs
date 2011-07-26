@@ -174,10 +174,10 @@ processDirPath dirPath = do
 processFilePath :: FilePath -> IO ()
 processFilePath filePath = do
 	eitherHandle <- try $ openFile filePath ReadMode
-	either (whenLeft filePath) (whenRight filePath) eitherHandle where
-		whenLeft filePath e = do
+	either whenLeft whenRight eitherHandle where
+		whenLeft e = do
 			putStrLn $ "Unable to open file " ++ (show filePath) ++ ": " ++ (show e)
-		whenRight filePath handle = do
+		whenRight handle = do
 			-- It may only throw an error if handle was already used.
 			hSetBuffering handle $ BlockBuffering (Just 2048)
 			-- May need to flush the handle, we are not checking for errors here.
