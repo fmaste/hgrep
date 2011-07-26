@@ -196,16 +196,10 @@ processHandle handle position state = do
 	mapM_ putStrLn log
 
 readLines :: Handle -> GrepM ()
-readLines handle = 
-	(do 
-		-- Not checking errors here, if hIsEOF fails readLine should have failed before.
-		isEOF <- liftIO $ hIsEOF handle
-		unless isEOF $ readLine handle >> local incrementLineNumber (readLines handle))
-	`catchError` 
-	(\e -> do 
-		position <- ask
-		let fileName = getFileName position
-		throwError $ e ++ (". Skipping file " ++ (show fileName)))
+readLines handle = do 
+	-- Not checking errors here, if hIsEOF fails readLine should have failed before.
+	isEOF <- liftIO $ hIsEOF handle
+	unless isEOF $ readLine handle >> local incrementLineNumber (readLines handle)
 
 readLine :: Handle -> GrepM ()
 readLine handle = do
@@ -214,8 +208,9 @@ readLine handle = do
 	case eitherLineStr of
 		Left e -> do
 			position <- ask
+			let fileName = getFileName position
 			let lineNumber = getLineNumber position
-			throwError $ "Error reading line number " ++ (show lineNumber) ++ ": " ++ (show e)
+			throwError $ "Skipping file \"" ++ fileName ++ "\", error reading line number " ++ (show lineNumber) ++ ": " ++ (show e)
 		Right lineStr -> do
 			readColumns lineStr
 
