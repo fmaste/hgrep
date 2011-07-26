@@ -89,12 +89,12 @@ data Action =
 data GrepState = GrepState String Integer [(Position, Integer)] (Maybe Position)
 	deriving Show
 
-modifyState :: MonadIO m => Action -> GrepState -> GrepM m GrepState
-modifyState Start state = return state
-modifyState NewLine state = do
+stateStep :: MonadIO m => Action -> GrepState -> GrepM m GrepState
+stateStep Start state = return state
+stateStep NewLine state = do
 	position <- ask
 	return $ resetState position state
-modifyState (AddChar char) state = do
+stateStep (AddChar char) state = do
 	position <- ask
 	let newState = addChar position char state
 	case (getLastMatchedPosition newState) of
@@ -102,7 +102,7 @@ modifyState (AddChar char) state = do
 			tell ["Found in: " ++ (show pos)]
 			return newState
 		Nothing -> return newState
-modifyState End state = return state
+stateStep End state = return state
 
 -- Create an initial array with (File "", 0)
 initialState :: String -> GrepState
@@ -202,9 +202,7 @@ readLine handle = do
 			let lineNumber = getLineNumber position
 			throwError $ "Skipping file \"" ++ fileName ++ "\", error reading line number " ++ (show lineNumber) ++ ": " ++ (show e)
 		Right lineStr -> do
-			state <- get
-			newState <- modifyState NewLine state
-			put newState
+			modifyState NewLine
 			readColumns lineStr
 
 readColumns :: MonadIO m => String -> GrepM m ()
@@ -213,8 +211,12 @@ readColumns (x:xs) = readColumn x >> local incrementColumnNumber (readColumns xs
 
 readColumn :: MonadIO m => Char -> GrepM m ()
 readColumn columnChar = do
+	modifyState (AddChar columnChar)
+
+modifyState :: MonadIO m => Action -> GrepM m ()
+modifyState action = do
 	state <- get
-	newState <- modifyState (AddChar columnChar) state
+	newState <- stateStep action state
 	put newState
 
 {-- la
