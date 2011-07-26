@@ -71,8 +71,6 @@ type ColumnNumber = Integer
 data Position = 
 	-- A path to start processing.
 	Path {fileName :: FilePath}
-	-- A directory to traverse.
-	| Directory {fileName :: FilePath}
 	-- A file to parse.
 	| File {fileName :: FilePath, lineNumber :: LineNumber, columnNumber :: ColumnNumber}
 	-- Parsing stdin.
@@ -85,7 +83,6 @@ initialFilePosition path = File path 1 1
 
 getFileName (Stdin _ _) = "Standard input"
 getFileName (Path fp) = fp
-getFileName (Directory fp) = fp
 getFileName (File fp _ _) = fp
 
 getLineNumber (Stdin ln _) = ln
