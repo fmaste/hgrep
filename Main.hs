@@ -143,7 +143,7 @@ main = do
 		then do
 			-- Take the first argument as the path if there is one.
 			let path = head args
-			((_, log), _) <- runGrepM processPath (Path path) (initialState "lala")
+			((_, log), _) <- runGrepM (processPath path) (Path path) (initialState "lala")
 			return log
 		else do
 			-- If no argument process stdin.
@@ -153,10 +153,8 @@ main = do
 	mapM_ putStrLn log
 	return ()
 
-processPath :: GrepM ()
-processPath = do
-	position <- ask
-	let path = getFileName position
+processPath :: FilePath -> GrepM ()
+processPath path = do
 	tell ["Processing path: " ++ path]
 	isDir <- liftIO $ doesDirectoryExist path
 	isFile <- liftIO $ doesFileExist path
@@ -178,7 +176,7 @@ processDirPath dirPath = do
 	-- TODO: Check errors!
 	paths <- liftIO $ getDirectoryContents dirPath
 	let filteredPaths =  map ((dirPath ++ "/") ++) $ filter (flip notElem [".", ".."]) paths
-	dirContentsList <- sequence $ map (\p -> local (\r -> Path p) processPath) filteredPaths
+	dirContentsList <- sequence $ map (\p -> local (\r -> Path p) (processPath p)) filteredPaths
 	return ()
 
 processFilePath :: FilePath -> GrepM ()
