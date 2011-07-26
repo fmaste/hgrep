@@ -8,7 +8,7 @@ import Control.Monad.List
 import Control.Monad.Error
 import Control.Monad.State
 import Control.Monad.Reader
-import Control.Monad.Writer.Strict -- TODO: See why memory used is halfed!
+import Control.Monad.Writer
 import Control.Monad.IO.Class
 import Control.OldException
 -- "sudo ghc-pkg expose transformers" was needed.
