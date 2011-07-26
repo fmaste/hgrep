@@ -195,9 +195,6 @@ readLines handle = do
 readLine :: MonadIO m => Handle -> GrepM m ()
 readLine handle = do
 	eitherLineStr <- liftIO $ try (hGetLine handle)
-	state <- get
-	newState <- modifyState NewLine state
-	put newState
 	case eitherLineStr of
 		Left e -> do
 			position <- ask
@@ -205,6 +202,9 @@ readLine handle = do
 			let lineNumber = getLineNumber position
 			throwError $ "Skipping file \"" ++ fileName ++ "\", error reading line number " ++ (show lineNumber) ++ ": " ++ (show e)
 		Right lineStr -> do
+			state <- get
+			newState <- modifyState NewLine state
+			put newState
 			readColumns lineStr
 
 readColumns :: MonadIO m => String -> GrepM m ()
