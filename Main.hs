@@ -97,7 +97,7 @@ stateStep NewLine state = do
 stateStep (AddChar char) state = do
 	position <- ask
 	let newState = addChar position char state
-	case (getLastMatchedPosition newState) of
+	case (getLastMatch newState) of
 		Just pos -> do
 			tell ["Found in: " ++ (show pos)]
 			return newState
@@ -124,8 +124,8 @@ addChar addedPos addedChar (GrepState pattern len counts _) = let
 	maybePos = if lastEqs == len then (Just lastPos) else Nothing
 	in (GrepState pattern len (init outCounts) maybePos)
 
-getLastMatchedPosition :: GrepState -> Maybe Position
-getLastMatchedPosition (GrepState _ _ _ maybePos) = maybePos
+getLastMatch :: GrepState -> Maybe Position
+getLastMatch (GrepState _ _ _ maybePos) = maybePos
 
 -------------------------------------------------------------------------------
 
