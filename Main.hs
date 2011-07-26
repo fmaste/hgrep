@@ -25,6 +25,8 @@ import System.Directory
 
 -------------------------------------------------------------------------------
 
+type Log = [String]
+
 type GrepError = String
 
 -- The Grep Monad has:
@@ -71,10 +73,6 @@ getColumnNumber (File _ _ cl) = cl
 
 incrementColumnNumber (Stdin ln cl) = Stdin ln (cl + 1)
 incrementColumnNumber (File fp ln cl) = File fp ln (cl + 1)
-
--------------------------------------------------------------------------------
-
-type Log = [String]
 
 -------------------------------------------------------------------------------
 
