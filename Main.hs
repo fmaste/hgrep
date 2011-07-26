@@ -96,7 +96,12 @@ modifyState NewLine state = do
 	return $ resetState position state
 modifyState (AddChar char) state = do
 	position <- ask
-	return $ addChar position char state
+	let newState = addChar position char state
+	case (getLastMatchedPosition newState) of
+		Just pos -> do
+			tell ["Found in: " ++ (show pos)]
+			return newState
+		Nothing -> return newState
 modifyState End state = return state
 
 -- Create an initial array with (File "", 0)
@@ -189,8 +194,10 @@ readLines handle = do
 
 readLine :: MonadIO m => Handle -> GrepM m ()
 readLine handle = do
-	--modify $ resetState position
 	eitherLineStr <- liftIO $ try (hGetLine handle)
+	state <- get
+	newState <- modifyState NewLine state
+	put newState
 	case eitherLineStr of
 		Left e -> do
 			position <- ask
@@ -206,11 +213,9 @@ readColumns (x:xs) = readColumn x >> local incrementColumnNumber (readColumns xs
 
 readColumn :: MonadIO m => Char -> GrepM m ()
 readColumn columnChar = do
-	position <- ask
-	modify (addChar position columnChar)
-	-- TODO: Leave the output on the state or use the writer!
-	maybePos <- gets getLastMatchedPosition
-	when (isJust maybePos) (tell ["Found in: " ++ (show $ fromJust maybePos)])
+	state <- get
+	newState <- modifyState (AddChar columnChar) state
+	put newState
 
 {-- la
 lalala
