@@ -34,12 +34,7 @@ import System.IO (
 	hIsEOF, 
 	hGetLine, 
 	IOMode(ReadMode))
-import System.Directory (
-	getPermissions, 
-	Permissions(readable), 
-	doesFileExist, 
-	doesDirectoryExist, 
-	getDirectoryContents)
+import System.Directory
 
 -------------------------------------------------------------------------------
 
