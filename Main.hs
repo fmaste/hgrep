@@ -19,8 +19,7 @@ import Control.OldException
 import Data.List
 import Data.Maybe
 import Data.Either
-import System (
-	getArgs)
+import System
 import System.IO (
 	Handle,
 	stdin, 
