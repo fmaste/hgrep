@@ -66,14 +66,14 @@ getFileName (File fp _ _) = fp
 getLineNumber (Stdin ln _) = ln
 getLineNumber (File _ ln _) = ln
 
-incrementLineNumber (Stdin ln cl) = Stdin (ln + 1) cl
-incrementLineNumber (File fp ln cl) = File fp (ln + 1) cl
+incrementLine (Stdin ln cl) = Stdin (ln + 1) cl
+incrementLine (File fp ln cl) = File fp (ln + 1) cl
 
 getColumnNumber (Stdin _ cl) = cl
 getColumnNumber (File _ _ cl) = cl
 
-incrementColumnNumber (Stdin ln cl) = Stdin ln (cl + 1)
-incrementColumnNumber (File fp ln cl) = File fp ln (cl + 1)
+incrementColumn (Stdin ln cl) = Stdin ln (cl + 1)
+incrementColumn (File fp ln cl) = File fp ln (cl + 1)
 
 -------------------------------------------------------------------------------
 
@@ -190,7 +190,7 @@ readLines :: MonadIO m => Handle -> GrepM m ()
 readLines handle = do 
 	-- Not checking errors here, if hIsEOF fails readLine should have failed before.
 	isEOF <- liftIO $ hIsEOF handle
-	unless isEOF $ readLine handle >> local incrementLineNumber (readLines handle)
+	unless isEOF $ readLine handle >> local incrementLine (readLines handle)
 
 readLine :: MonadIO m => Handle -> GrepM m ()
 readLine handle = do
@@ -209,7 +209,7 @@ readLine handle = do
 
 readColumns :: MonadIO m => String -> GrepM m ()
 readColumns [] = return ()
-readColumns (x:xs) = readColumn x >> local incrementColumnNumber (readColumns xs)
+readColumns (x:xs) = readColumn x >> local incrementColumn (readColumns xs)
 
 readColumn :: MonadIO m => Char -> GrepM m ()
 readColumn columnChar = do
