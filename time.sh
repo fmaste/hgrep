@@ -4,7 +4,7 @@
 echo "\n"
 echo "--------------------------------------------------------------------------------"
 echo "\n"
-time grep lala /usr/share/dict/words -o
+time grep lala /usr/share/dict/words -o -n -u
 echo "\n"
 echo "--------------------------------------------------------------------------------"
 echo "\n"
