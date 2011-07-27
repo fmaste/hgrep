@@ -1,4 +1,4 @@
 #!/bin/sh
 
-ghc Main.hs -o hrgrep -O2 -fforce-recomp -package mtl
+ghc Main.hs -o hrgrep -O2 -fforce-recomp -package mtl -package bytestring
 
