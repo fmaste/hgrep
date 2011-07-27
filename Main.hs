@@ -1,6 +1,7 @@
 {-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances  #-}
 module Main (
-	main
+	main,
+	GrepM
 ) where
 
 -------------------------------------------------------------------------------
