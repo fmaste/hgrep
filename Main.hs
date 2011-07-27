@@ -138,10 +138,9 @@ stateStep (AddChar char) state = do
 	position <- ask
 	let (newState, maybePos) = addChar position char state
 	case maybePos of
-		Just pos -> do
-			tell ["Found in: " ++ (show pos)]
-			return newState
-		Nothing -> return newState
+		Just pos -> tell ["Found in: " ++ (show pos)]
+		Nothing -> return ()
+	return newState
 stateStep End state = return state
 
 -- Create an initial array with (File "", 0)
