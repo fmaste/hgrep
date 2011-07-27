@@ -37,7 +37,7 @@ import System.IO (
 	hGetLine,
 	hPutStrLn,
 	hClose)
-import qualified Data.ByteString.Char8 as BS
+import qualified Data.ByteString.Lazy.Char8 as BS
 import System.Directory
 
 -------------------------------------------------------------------------------
@@ -248,7 +248,7 @@ readLine line = modifyState NewLine >> readColumns line
 
 readColumns :: MonadIO m => BS.ByteString -> GrepM m ()
 readColumns columns = 
-	BS.foldr' (\char ans -> readColumn char >> local incrementColumn ans) (return ()) columns
+	BS.foldr (\char ans -> readColumn char >> local incrementColumn ans) (return ()) columns
 
 readColumn :: MonadIO m => Char -> GrepM m ()
 readColumn columnChar = modifyState (AddChar columnChar)
