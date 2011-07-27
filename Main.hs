@@ -44,9 +44,9 @@ instance Monad m => Monad (GrepM m) where
     return a = GrepM $ \_ s -> return (Right a, mempty, s)
     m >>= f = GrepM $ \p s -> do
 	(err, w', s') <- runGrepM m p s
-	case (err, w', s') of
-		(Left e', _, _) -> return (Left e', w', s')
-		(Right a, _, _) -> do
+	case err of
+		Left e' -> return (Left e', w', s')
+		Right a -> do
 			(e'', w'', s'') <- runGrepM (f a) p s'
 			return (e'', mappend w' w'', s'')
     fail str = GrepM $ \p s -> return (Left str, mempty, s)
