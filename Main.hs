@@ -5,6 +5,9 @@ module Main (
 
 -------------------------------------------------------------------------------
 
+import Data.Maybe
+import Data.Either
+import Data.List (foldr, foldl')
 import Data.Monoid
 import Control.Monad
 import Control.Monad.Trans (MonadTrans(..))
@@ -21,13 +24,10 @@ import Control.OldException
 -- sudo cabal upgrade transformers
 -- sudo cabal upgrade mtl
 -- For profiling: cabal install transformers mtl --enable-library-profiling --reinstall
-import Data.Maybe
-import Data.Either
-import Data.List (foldr, foldl')
 import System (getArgs)
 import System.IO (Handle, stdin, stderr, hPutStrLn)
-import qualified Data.ByteString.Lazy.Char8 as BS
 import System.Directory (doesDirectoryExist, doesFileExist, getPermissions, Permissions(..), getDirectoryContents)
+import qualified Data.ByteString.Lazy.Char8 as BS
 
 -------------------------------------------------------------------------------
 
