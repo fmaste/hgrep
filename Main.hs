@@ -21,6 +21,7 @@ import Control.OldException
 -- For profiling: cabal install transformers mtl --enable-library-profiling --reinstall
 import Data.Maybe
 import Data.Either
+import Data.List (foldr, foldl')
 import System
 import System.IO (
 	stdin, 
@@ -36,7 +37,7 @@ import System.IO (
 	hGetLine,
 	hPutStrLn,
 	hClose)
-import qualified Data.ByteString.Lazy.Char8 as BS
+import qualified Data.ByteString.Char8 as BS
 import System.Directory
 
 -------------------------------------------------------------------------------
@@ -232,24 +233,22 @@ processHandle handle position state = do
 
 processContent :: BS.ByteString -> Position -> GrepState -> IO ()
 processContent content position state = do 
-	(eitherAns, log, state) <- runGrepM (readLines $ BS.lines content) position state
+	(eitherAns, log, state) <- runGrepM (readLines content) position state
 	case eitherAns of
 		Left e -> hPutStrLn stderr e
 		Right a -> return ()
 	mapM_ putStrLn log
 
-readLines :: MonadIO m => [BS.ByteString] -> GrepM m ()
-readLines [] = return ()
-readLines (x:xs) = readLine x >> local incrementLine (readLines xs)
+readLines :: MonadIO m => BS.ByteString -> GrepM m ()
+readLines content = 
+	foldr (\line ans -> readLine line >> local incrementLine ans) (return ()) $ BS.lines content
 
 readLine :: MonadIO m => BS.ByteString -> GrepM m ()
 readLine line = modifyState NewLine >> readColumns line
 
 readColumns :: MonadIO m => BS.ByteString -> GrepM m ()
-readColumns bs = do
-	if BS.null bs
-		then return ()
-		else readColumn (BS.head bs) >> local incrementColumn (readColumns $ BS.tail bs)
+readColumns columns = 
+	BS.foldr' (\char ans -> readColumn char >> local incrementColumn ans) (return ()) columns
 
 readColumn :: MonadIO m => Char -> GrepM m ()
 readColumn columnChar = do
