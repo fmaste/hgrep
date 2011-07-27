@@ -161,7 +161,7 @@ addChar addedPos addedChar (GrepState pattern len counts) = let
 			in (actualPos, actualEqs')
 	(lastPos, lastEqs) = last outCounts
 	maybePos = if lastEqs == len then (Just lastPos) else Nothing
-	in (GrepState pattern len (init outCounts), maybePos)
+	in (GrepState pattern len outCounts, maybePos)
 
 -------------------------------------------------------------------------------
 
