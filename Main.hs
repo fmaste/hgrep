@@ -19,7 +19,6 @@ import Control.OldException
 -- sudo cabal upgrade transformers
 -- sudo cabal upgrade mtl
 -- For profiling: cabal install transformers mtl --enable-library-profiling --reinstall
-import Data.List
 import Data.Maybe
 import Data.Either
 import System
