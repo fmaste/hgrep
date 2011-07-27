@@ -22,7 +22,21 @@ import Control.OldException
 import Data.Maybe
 import Data.Either
 import System
-import System.IO
+import System.IO (
+	stdin, 
+	stderr, 
+	openFile, 
+	IOMode(ReadMode), 
+	Handle, 
+	hSetBuffering, 
+	BufferMode(BlockBuffering), 
+	hSetEncoding, 
+	utf8, 
+	hIsEOF,
+	hGetLine,
+	hPutStrLn,
+	hClose)
+--import Data.ByteString
 import System.Directory
 
 -------------------------------------------------------------------------------
