@@ -36,7 +36,7 @@ import System.IO (
 	hGetLine,
 	hPutStrLn,
 	hClose)
--- TODO: import Data.ByteString
+import qualified Data.ByteString.Lazy.Char8 as BS
 import System.Directory
 
 -------------------------------------------------------------------------------
@@ -213,52 +213,42 @@ processDirPath dirPath state = do
 
 processFilePath :: FilePath -> GrepState -> IO ()
 processFilePath filePath state = do
-	eitherHandle <- try $ openFile filePath ReadMode
-	either whenLeft whenRight eitherHandle where
-		whenLeft e = do
-			hPutStrLn stderr $ "Unable to open file \"" ++ (show filePath) ++ "\": " ++ (show e)
-		whenRight handle = do
-			-- It may only throw an error if handle was already used.
-			hSetBuffering handle $ BlockBuffering (Just 2048)
-			-- May need to flush the handle, we are not checking for errors here.
-			hSetEncoding handle utf8
-			processHandle handle (initialFilePosition filePath) state
-			-- TODO: At least log the closing error!
-			try $ hClose handle
-			return ()
+	eitherContent <- try $ BS.readFile filePath
+	case eitherContent of
+		Left e -> do
+			 hPutStrLn stderr $ "Skipping file \"" ++ filePath ++ "\": " ++ (show e)
+		Right content -> do
+			processContent content (initialFilePosition filePath) state
 
 processHandle :: Handle -> Position -> GrepState -> IO ()
 processHandle handle position state = do
-	(eitherAns, log, state) <- runGrepM (readLines handle) position state
+	eitherContent <- try $ BS.hGetContents handle
+	case eitherContent of
+		Left e -> do
+			hPutStrLn stderr $ "Error reading from handle:" ++ (show e)
+		Right content -> do
+			processContent content position state
+
+processContent :: BS.ByteString -> Position -> GrepState -> IO ()
+processContent content position state = do 
+	(eitherAns, log, state) <- runGrepM (readLines $ BS.lines content) position state
 	case eitherAns of
 		Left e -> hPutStrLn stderr e
 		Right a -> return ()
 	mapM_ putStrLn log
 
-readLines :: MonadIO m => Handle -> GrepM m ()
-readLines handle = do 
-	-- Not checking errors here, if hIsEOF fails readLine should have failed before.
-	isEOF <- liftIO $ hIsEOF handle
-	unless isEOF $ readLine handle >> local incrementLine (readLines handle)
+readLines :: MonadIO m => [BS.ByteString] -> GrepM m ()
+readLines [] = return ()
+readLines (x:xs) = readLine x >> local incrementLine (readLines xs)
 
-readLine :: MonadIO m => Handle -> GrepM m ()
-readLine handle = do
-	eitherLineStr <- liftIO $ try (hGetLine handle)
-	case eitherLineStr of
-		Left e -> do
-			position <- ask
-			let fileName = getFileName position
-			let lineNumber = getLineNumber position
-			throwError $ 
-				"Skipping file \"" ++ fileName ++ 
-				"\", error reading line number " ++ (show lineNumber) ++ ": " ++ (show e)
-		Right lineStr -> do
-			modifyState NewLine
-			readColumns lineStr
+readLine :: MonadIO m => BS.ByteString -> GrepM m ()
+readLine line = modifyState NewLine >> readColumns line
 
-readColumns :: MonadIO m => String -> GrepM m ()
-readColumns [] = return ()
-readColumns (x:xs) = readColumn x >> local incrementColumn (readColumns xs)
+readColumns :: MonadIO m => BS.ByteString -> GrepM m ()
+readColumns bs = do
+	if BS.null bs
+		then return ()
+		else readColumn (BS.head bs) >> local incrementColumn (readColumns $ BS.tail bs)
 
 readColumn :: MonadIO m => Char -> GrepM m ()
 readColumn columnChar = do
