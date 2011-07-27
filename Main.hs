@@ -54,15 +54,16 @@ type GrepError = String
 newtype GrepM m a = GrepM {runGrepM :: Position -> GrepState -> m (Either GrepError a, Log, GrepState)}
 
 instance Monad m => Monad (GrepM m) where
-    return a = GrepM $ \_ s -> return (Right a, mempty, s)
-    m >>= f = GrepM $ \p s -> do
-	(err, w', s') <- runGrepM m p s
-	case err of
-		Left e' -> return (Left e', w', s')
-		Right a -> do
-			(e'', w'', s'') <- runGrepM (f a) p s'
-			return (e'', mappend w' w'', s'')
-    fail str = GrepM $ \p s -> return (Left str, mempty, s)
+	return a = GrepM $ \_ s -> return (Right a, mempty, s)
+	m >>= f = GrepM $ \p s -> do
+		(err, w', s') <- runGrepM m p s
+		case err of
+			Left e' -> do
+				return (Left e', w', s')
+			Right a -> do
+				(e'', w'', s'') <- runGrepM (f a) p s'
+				return (e'', mappend w' w'', s'')
+	fail str = GrepM $ \p s -> return (Left str, mempty, s)
 
 instance MonadTrans GrepM where
 	lift m = GrepM $ \p s -> do
