@@ -3,6 +3,8 @@ module Main (
 	main
 ) where
 
+-------------------------------------------------------------------------------
+
 import Data.Monoid
 import Control.Monad
 import Control.Monad.Trans (MonadTrans(..))
@@ -23,20 +25,7 @@ import Data.Maybe
 import Data.Either
 import Data.List (foldr, foldl')
 import System
-import System.IO (
-	stdin, 
-	stderr, 
-	openFile, 
-	IOMode(ReadMode), 
-	Handle, 
-	hSetBuffering, 
-	BufferMode(BlockBuffering), 
-	hSetEncoding, 
-	utf8, 
-	hIsEOF,
-	hGetLine,
-	hPutStrLn,
-	hClose)
+import System.IO (Handle, stdin, stderr, hPutStrLn)
 import qualified Data.ByteString.Lazy.Char8 as BS
 import System.Directory
 
