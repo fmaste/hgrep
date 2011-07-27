@@ -3,13 +3,14 @@ module Main (
 	main
 ) where
 
+import Data.Monoid
 import Control.Monad
-import Control.Monad.List
-import Control.Monad.Error
-import Control.Monad.State
-import Control.Monad.Reader
-import Control.Monad.Writer
-import Control.Monad.IO.Class
+import Control.Monad.Trans (MonadTrans(..))
+import Control.Monad.Error (MonadError(..))
+import Control.Monad.State (MonadState(..))
+import Control.Monad.Reader (MonadReader(..))
+import Control.Monad.Writer (MonadWriter(..))
+import Control.Monad.IO.Class (MonadIO(..))
 import Control.OldException
 -- "sudo ghc-pkg expose transformers" was needed.
 -- See: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=626985
