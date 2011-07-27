@@ -27,7 +27,7 @@ import Data.List (foldr, foldl')
 import System (getArgs)
 import System.IO (Handle, stdin, stderr, hPutStrLn)
 import qualified Data.ByteString.Lazy.Char8 as BS
-import System.Directory
+import System.Directory (doesDirectoryExist, doesFileExist, getPermissions, Permissions(..), getDirectoryContents)
 
 -------------------------------------------------------------------------------
 
