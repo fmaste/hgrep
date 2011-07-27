@@ -86,9 +86,9 @@ instance MonadIO m => MonadIO (GrepM m) where
 
 -------------------------------------------------------------------------------
 
-type LineNumber = Integer
+type LineNumber = Int
 
-type ColumnNumber = Integer
+type ColumnNumber = Int
 
 data Position = 
 	-- A file to parse.
@@ -126,7 +126,7 @@ data Action =
 	deriving Show
 
 -- The pattern, the pattern length and the array of (Position, Eq counts)
-data GrepState = GrepState String Integer [(Position, Integer)]
+data GrepState = GrepState String Int [(Position, Int)]
 	deriving Show
 
 stateStep :: MonadIO m => Action -> GrepState -> GrepM m GrepState
@@ -134,7 +134,6 @@ stateStep Start state = return state
 stateStep NewLine state = do
 	position <- ask
 	return $ resetState position state
-	-- return $ lift $ ListT [resetState position state, state]
 stateStep (AddChar char) state = do
 	position <- ask
 	let (newState, maybePos) = addChar position char state
@@ -148,12 +147,12 @@ stateStep End state = return state
 -- Create an initial array with (File "", 0)
 initialState :: String -> GrepState
 initialState pattern = let
-	lenInt = length pattern
-	counts = replicate lenInt (File "" 0 0, 0)
-	in GrepState pattern (toInteger lenInt) counts
+	len = length pattern
+	counts = replicate len (File "" 0 0, 0)
+	in GrepState pattern len counts
 
 resetState :: Position -> GrepState -> GrepState
-resetState pos (GrepState pattern len _) = GrepState pattern len (replicate (fromInteger len) (pos, 0))
+resetState pos (GrepState pattern len _) = GrepState pattern len (replicate len (pos, 0))
 
 addChar :: Position -> Char -> GrepState -> (GrepState, Maybe Position)
 addChar addedPos addedChar (GrepState pattern len counts) = let 
