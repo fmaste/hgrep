@@ -126,7 +126,7 @@ data Action =
 	deriving Show
 
 -- The pattern, the pattern length and the array of (Position, Eq counts)
-data GrepState = GrepState String Integer [(Position, Integer)] (Maybe Position)
+data GrepState = GrepState String Integer [(Position, Integer)]
 	deriving Show
 
 stateStep :: MonadIO m => Action -> GrepState -> GrepM m GrepState
@@ -137,8 +137,8 @@ stateStep NewLine state = do
 	-- return $ lift $ ListT [resetState position state, state]
 stateStep (AddChar char) state = do
 	position <- ask
-	let newState = addChar position char state
-	case (getLastMatch newState) of
+	let (newState, maybePos) = addChar position char state
+	case maybePos of
 		Just pos -> do
 			tell ["Found in: " ++ (show pos)]
 			return newState
@@ -150,23 +150,20 @@ initialState :: String -> GrepState
 initialState pattern = let
 	lenInt = length pattern
 	counts = replicate lenInt (File "" 0 0, 0)
-	in GrepState pattern (toInteger lenInt) counts Nothing
+	in GrepState pattern (toInteger lenInt) counts
 
 resetState :: Position -> GrepState -> GrepState
-resetState pos (GrepState pattern len _ _) = GrepState pattern len (replicate (fromInteger len) (pos, 0)) Nothing
+resetState pos (GrepState pattern len _) = GrepState pattern len (replicate (fromInteger len) (pos, 0))
 
-addChar :: Position -> Char -> GrepState -> GrepState
-addChar addedPos addedChar (GrepState pattern len counts _) = let 
+addChar :: Position -> Char -> GrepState -> (GrepState, Maybe Position)
+addChar addedPos addedChar (GrepState pattern len counts) = let 
 	outCounts = map f $ zip pattern ((addedPos, 0):counts) where
 		f (actualChar, (actualPos, actualEqs)) = 
 			let actualEqs' = if actualChar == addedChar then (actualEqs + 1) else actualEqs
 			in (actualPos, actualEqs')
 	(lastPos, lastEqs) = last outCounts
 	maybePos = if lastEqs == len then (Just lastPos) else Nothing
-	in (GrepState pattern len (init outCounts) maybePos)
-
-getLastMatch :: GrepState -> Maybe Position
-getLastMatch (GrepState _ _ _ maybePos) = maybePos
+	in (GrepState pattern len (init outCounts), maybePos)
 
 -------------------------------------------------------------------------------
 
