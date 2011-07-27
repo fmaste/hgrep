@@ -251,8 +251,7 @@ readColumns columns =
 	BS.foldr' (\char ans -> readColumn char >> local incrementColumn ans) (return ()) columns
 
 readColumn :: MonadIO m => Char -> GrepM m ()
-readColumn columnChar = do
-	modifyState (AddChar columnChar)
+readColumn columnChar = modifyState (AddChar columnChar)
 
 modifyState :: MonadIO m => Action -> GrepM m ()
 modifyState action = do
