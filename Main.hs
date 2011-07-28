@@ -100,8 +100,8 @@ instance Monad m => MonadError GrepError (GrepM m) where
 	catchError m h = GrepM $ \p s -> do
 		(err, p', s') <- runGrepM m p s
 		case err of
-			Left e -> runGrepM (h e) p' s'
 			Right a -> return (Right a, p', s')
+			Left e -> runGrepM (h e) p' s'
 
 instance MonadIO m => MonadIO (GrepM m) where
 	liftIO = lift . liftIO
