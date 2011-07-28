@@ -47,15 +47,18 @@ newtype GrepM m a = GrepM {runGrepM :: Position -> GrepState -> m (Either GrepEr
 
 instance Monad m => Monad (GrepM m) where
 	return a = GrepM $ \p s -> return (Right a, p, s)
-	m >>= f = GrepM $ \p s -> do
-		(err, p', s') <- runGrepM m p s
-		case err of
-			Left e' -> do
-				return (Left e', p', s')
-			Right a -> do
-				(e'', p'', s'') <- runGrepM (f a) p' s'
-				return $ (e'', p'', s'')
+	m >>= f = bind m f
 	fail str = GrepM $ \p s -> return (Left str, p, s)
+
+bind :: Monad m => GrepM m a -> (a -> GrepM m b) -> GrepM m b
+bind m f = GrepM $ \p s -> do
+	(err, p', s') <- runGrepM m p s
+	case err of
+		Left e' -> do
+			return (Left e', p', s')
+		Right a -> do
+			(e'', p'', s'') <- runGrepM (f a) p' s'
+			return $ (e'', p'', s'')
 
 getPosition :: Monad m => GrepM m Position
 getPosition = GrepM $ \p s -> return (Right p, p, s)
