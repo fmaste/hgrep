@@ -215,11 +215,14 @@ processPath path state = do
 
 processDirPath :: FilePath -> GrepState -> IO ()
 processDirPath dirPath state = do
-	-- TODO: Check errors!
-	paths <- getDirectoryContents dirPath
-	let filteredPaths =  map ((dirPath ++ "/") ++) $ filter (flip notElem [".", ".."]) paths
-	dirContentsList <- sequence $ map (\p -> processPath p state) filteredPaths
-	return ()
+	eitherPaths <- try $ getDirectoryContents dirPath
+	case eitherPaths of
+		Left e -> do
+			hPutStrLn stderr $ "Skipping directory \"" ++ dirPath ++ "\": " ++ (show e)
+		Right paths -> do
+			let filteredPaths =  map ((dirPath ++ "/") ++) $ filter (flip notElem [".", ".."]) paths
+			dirContentsList <- sequence $ map (\p -> processPath p state) filteredPaths
+			return ()
 
 processFilePath :: FilePath -> GrepState -> IO ()
 processFilePath filePath state = do
