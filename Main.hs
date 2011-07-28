@@ -250,7 +250,7 @@ processContent content position state = do
 	case eitherAns of
 		Left e -> hPutStrLn stderr e
 		Right a -> return ()
-	-- TODO: Ass a Writer monad
+	-- TODO: Create a log a Writer monad
 	-- mapM_ putStrLn $ log
 
 readLines :: MonadIO m => BS.ByteString -> GrepM m ()
