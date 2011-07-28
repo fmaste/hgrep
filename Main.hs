@@ -254,7 +254,7 @@ readLines content = mapM_ readLine $ BS.lines content
 
 readLine :: MonadIO m => BS.ByteString -> GrepM m ()
 readLine line = do
-	modifyState' NewLine
+	modifyStateM (stateStep NewLine)
 	readColumns line
 	modifyPosition incrementLine
 
@@ -267,13 +267,7 @@ readColumns columns
 		readColumns $ BS.tail columns
 
 readColumn :: MonadIO m => Char -> GrepM m ()
-readColumn column = modifyState' (AddChar column)
-
-modifyState' :: MonadIO m => Action -> GrepM m ()
-modifyState' action = do
-	state <- getState
-	newState <- stateStep action state
-	setState newState
+readColumn column = modifyStateM (stateStep (AddChar column))
 
 {-- 
 la
