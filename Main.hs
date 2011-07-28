@@ -57,6 +57,8 @@ bind m f = GrepM $ \p s -> do
 		Right a -> runGrepM (f a) p' s'
 		Left e' -> return (Left e', p', s')
 
+-- Position as a state monad
+
 getPosition :: Monad m => GrepM m Position
 getPosition = GrepM $ \p s -> return (Right p, p, s)
 
@@ -73,6 +75,8 @@ modifyPositionM f = do
 	p <- getPosition
 	p' <- f p
 	setPosition p'
+
+-- State monad with GrepState
 
 getState :: Monad m => GrepM m GrepState
 getState = GrepM $ \p s -> return (Right s, p, s)
