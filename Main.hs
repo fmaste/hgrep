@@ -226,13 +226,16 @@ processHandle handle position state = do
 		Right content -> do
 			processContent content position state
 
+-------------------------------------------------------------------------------
+
 processContent :: BS.ByteString -> Position -> GrepState -> IO ()
 processContent content position state = do 
 	(eitherAns, p, state) <- runGrepM (readLines content) position state
 	case eitherAns of
 		Left e -> hPutStrLn stderr e
 		Right a -> return ()
-	-- TODO: mapM_ putStrLn $ log
+	-- TODO: Ass a Writer monad
+	-- mapM_ putStrLn $ log
 
 readLines :: MonadIO m => BS.ByteString -> GrepM m ()
 readLines content = mapM_ readLine $ BS.lines content
