@@ -18,7 +18,6 @@ import Data.Monoid
 import Control.Monad
 import Control.Monad.Trans (MonadTrans(..))
 import Control.Monad.Error (MonadError(..))
-import Control.Monad.State (MonadState(..))
 import Control.Monad.IO.Class (MonadIO(..))
 import Control.OldException
 -- "sudo ghc-pkg expose transformers" was needed.
@@ -74,14 +73,27 @@ modifyPositionM f = do
 	p' <- f p
 	setPosition p'
 
+getState :: Monad m => GrepM m GrepState
+getState = GrepM $ \p s -> return (Right s, p, s)
+
+setState :: Monad m => GrepState -> GrepM m ()
+setState s = GrepM $ \p _ -> return (Right (), p, s)
+
+modifyState :: MonadIO m => (GrepState -> GrepState) -> GrepM m ()
+modifyState f = do
+	s <- getState
+	setState (f s)
+
+modifyStateM :: Monad m => (GrepState -> GrepM m GrepState) -> GrepM m ()
+modifyStateM f = do
+	s <- getState
+	s' <- f s
+	setState s'
+
 instance MonadTrans GrepM where
 	lift m = GrepM $ \p s -> do
 		a <- m
 		return (Right a, p, s)
-
-instance Monad m => MonadState GrepState (GrepM m) where
-	get = GrepM $ \p s -> return (Right s, p, s)
-	put s = GrepM $ \p _ -> return (Right (), p, s)
 
 instance Monad m => MonadError GrepError (GrepM m) where
 	throwError e = GrepM $ \p s -> return (Left e, p, s)
@@ -259,9 +271,9 @@ readColumn column = modifyState' (AddChar column)
 
 modifyState' :: MonadIO m => Action -> GrepM m ()
 modifyState' action = do
-	state <- get
+	state <- getState
 	newState <- stateStep action state
-	put newState
+	setState newState
 
 {-- 
 la
