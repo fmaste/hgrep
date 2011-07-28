@@ -27,7 +27,7 @@ import Control.Parallel
 -- Also:
 -- sudo cabal upgrade transformers
 -- sudo cabal upgrade mtl
--- For profiling: cabal install transformers mtl --enable-library-profiling --reinstall
+-- For profiling: cabal install transformers mtl parallel --enable-library-profiling --reinstall
 import System (getArgs)
 import System.IO (Handle, stdin, stderr, hPutStrLn)
 import System.Directory (doesDirectoryExist, doesFileExist, getPermissions, Permissions(..), getDirectoryContents)
