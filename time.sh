@@ -1,12 +1,12 @@
 #!/bin/sh
 
 ./make.sh
-echo "\n"
+echo
 echo "--------------------------------------------------------------------------------"
-echo "\n"
+echo
 time grep lala /usr/share/dict/words -o -n
-echo "\n"
+echo
 echo "--------------------------------------------------------------------------------"
-echo "\n"
+echo
 time ./hrgrep lala /usr/share/dict/words
 
