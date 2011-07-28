@@ -21,6 +21,7 @@ import Control.Monad.Error (MonadError(..))
 import Control.Monad.IO.Class (MonadIO(..))
 import Control.OldException
 import Control.Parallel
+import Control.Concurrent
 -- "sudo ghc-pkg expose transformers" was needed.
 -- See: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=626985
 -- And: http://stackoverflow.com/questions/5252066/why-is-package-hidden-by-default-and-how-can-i-unhide-it
