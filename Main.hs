@@ -1,7 +1,12 @@
 {-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances  #-}
 module Main (
 	main,
-	GrepM
+	GrepM,
+	Position,
+	getPosition,
+	setPosition,
+	modifyPosition,
+	modifyPositionM
 ) where
 
 -------------------------------------------------------------------------------
@@ -14,8 +19,6 @@ import Control.Monad
 import Control.Monad.Trans (MonadTrans(..))
 import Control.Monad.Error (MonadError(..))
 import Control.Monad.State (MonadState(..))
-import Control.Monad.Reader (MonadReader(..))
-import Control.Monad.Writer (MonadWriter(..))
 import Control.Monad.IO.Class (MonadIO(..))
 import Control.OldException
 -- "sudo ghc-pkg expose transformers" was needed.
@@ -32,8 +35,6 @@ import qualified Data.ByteString.Lazy.Char8 as BS
 
 -------------------------------------------------------------------------------
 
-type Log = [String]
-
 type GrepError = String
 
 -- The Grep Monad has:
@@ -42,49 +43,53 @@ type GrepError = String
 -- A state with the parsing state machine.
 -- And finally, allows to handle errors.
 -- All this inside the list monad to allow to generate multiple states from a parsing.
-newtype GrepM m a = GrepM {runGrepM :: Position -> GrepState -> m (Either GrepError a, Log, GrepState)}
+newtype GrepM m a = GrepM {runGrepM :: Position -> GrepState -> m (Either GrepError a, Position, GrepState)}
 
 instance Monad m => Monad (GrepM m) where
-	return a = GrepM $ \_ s -> return (Right a, mempty, s)
+	return a = GrepM $ \p s -> return (Right a, p, s)
 	m >>= f = GrepM $ \p s -> do
-		(err, w', s') <- runGrepM m p s
+		(err, p', s') <- runGrepM m p s
 		case err of
 			Left e' -> do
-				return (Left e', w', s')
+				return (Left e', p', s')
 			Right a -> do
-				(e'', w'', s'') <- runGrepM (f a) p s'
-				return (e'', mappend w' w'', s'')
-	fail str = GrepM $ \p s -> return (Left str, mempty, s)
+				(e'', p'', s'') <- runGrepM (f a) p' s'
+				return $ (e'', p'', s'')
+	fail str = GrepM $ \p s -> return (Left str, p, s)
+
+getPosition :: Monad m => GrepM m Position
+getPosition = GrepM $ \p s -> return (Right p, p, s)
+
+setPosition :: Monad m => Position -> GrepM m ()
+setPosition p = GrepM $ \_ s -> return (Right (), p, s)
+
+modifyPosition :: MonadIO m => (Position -> Position) -> GrepM m ()
+modifyPosition f = do
+	p <- getPosition
+	setPosition (f p)
+
+modifyPositionM :: Monad m => (Position -> GrepM m Position) -> GrepM m ()
+modifyPositionM f = do
+	p <- getPosition
+	p' <- f p
+	setPosition p'
 
 instance MonadTrans GrepM where
 	lift m = GrepM $ \p s -> do
 		a <- m
-		return (Right a, mempty, s)
-
-instance Monad m => MonadReader Position (GrepM m) where
-	ask = GrepM $ \p s -> return (Right p, mempty, s)
-	local f m = GrepM $ \p s -> runGrepM m (f p) s
-
-instance Monad m => MonadWriter Log (GrepM m) where
-	tell w = GrepM $ \_ s -> return (Right (), w, s)
-	listen m = GrepM $ \p s -> do
-		(Right a, w', s') <- runGrepM m p s
-		return (Right (a, w'), w', s')
-	pass m = GrepM $ \p s -> do
-		(Right (a, f), w', s') <- runGrepM m p s
-		return (Right a, f w', s')
+		return (Right a, p, s)
 
 instance Monad m => MonadState GrepState (GrepM m) where
-	get = GrepM $ \p s -> return (Right s, mempty, s)
-	put s = GrepM $ \_ _ -> return (Right (), mempty, s)
+	get = GrepM $ \p s -> return (Right s, p, s)
+	put s = GrepM $ \p _ -> return (Right (), p, s)
 
 instance Monad m => MonadError GrepError (GrepM m) where
-	throwError e = GrepM $ \p s -> return (Left e, mempty, s)
+	throwError e = GrepM $ \p s -> return (Left e, p, s)
 	catchError m h = GrepM $ \p s -> do
-		(err, w', s') <- runGrepM m p s
+		(err, p', s') <- runGrepM m p s
 		case err of
-			Left e -> runGrepM (h e) p s'
-			Right a -> return (Right a, w', s')
+			Left e -> runGrepM (h e) p' s'
+			Right a -> return (Right a, p', s')
 
 instance MonadIO m => MonadIO (GrepM m) where
 	liftIO = lift . liftIO
@@ -137,13 +142,13 @@ data GrepState = GrepState String Int [(Position, Int)]
 stateStep :: MonadIO m => Action -> GrepState -> GrepM m GrepState
 stateStep Start state = return state
 stateStep NewLine state = do
-	position <- ask
+	position <- getPosition
 	return $ resetState position state
 stateStep (AddChar char) state = do
-	position <- ask
+	position <- getPosition
 	let (newState, maybePos) = addChar position char state
 	case maybePos of
-		Just pos -> tell ["Found in: " ++ (show pos)]
+		Just pos -> liftIO $ putStrLn ("Found in: " ++ (show pos))
 		Nothing -> return ()
 	return newState
 stateStep End state = return state
@@ -223,25 +228,31 @@ processHandle handle position state = do
 
 processContent :: BS.ByteString -> Position -> GrepState -> IO ()
 processContent content position state = do 
-	(eitherAns, log, state) <- runGrepM (readLines content) position state
+	(eitherAns, p, state) <- runGrepM (readLines content) position state
 	case eitherAns of
 		Left e -> hPutStrLn stderr e
 		Right a -> return ()
-	mapM_ putStrLn log
+	-- TODO: mapM_ putStrLn $ log
 
 readLines :: MonadIO m => BS.ByteString -> GrepM m ()
-readLines content = 
-	foldr (\line ans -> readLine line >> local incrementLine ans) (return ()) $ BS.lines content
+readLines content = mapM_ readLine $ BS.lines content
 
 readLine :: MonadIO m => BS.ByteString -> GrepM m ()
-readLine line = modifyState NewLine >> readColumns line
+readLine line = do
+	modifyState NewLine
+	readColumns line
+	modifyPosition incrementLine
 
 readColumns :: MonadIO m => BS.ByteString -> GrepM m ()
-readColumns columns = 
-	BS.foldr (\char ans -> readColumn char >> local incrementColumn ans) (return ()) columns
+readColumns columns
+	| BS.null columns = return ()
+	| otherwise = do
+		readColumn $ BS.head columns
+		modifyPosition incrementColumn
+		readColumns $ BS.tail columns
 
 readColumn :: MonadIO m => Char -> GrepM m ()
-readColumn columnChar = modifyState (AddChar columnChar)
+readColumn column = modifyState (AddChar column)
 
 modifyState :: MonadIO m => Action -> GrepM m ()
 modifyState action = do
