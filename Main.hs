@@ -53,8 +53,8 @@ bind :: Monad m => GrepM m a -> (a -> GrepM m b) -> GrepM m b
 bind m f = GrepM $ \p s -> do
 	(err, p', s') <- runGrepM m p s
 	case err of
-		Left e' -> return (Left e', p', s')
 		Right a -> runGrepM (f a) p' s'
+		Left e' -> return (Left e', p', s')
 
 getPosition :: Monad m => GrepM m Position
 getPosition = GrepM $ \p s -> return (Right p, p, s)
