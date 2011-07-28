@@ -155,8 +155,11 @@ data GrepState = GrepState String Int [(Position, Int)]
 stateStep :: MonadIO m => Action -> GrepState -> GrepM m GrepState
 stateStep Start state = return state
 stateStep NewLine state = do
-	position <- getPosition
-	return $ resetState position state
+	{--
+		position <- getPosition
+		return $ resetState position state
+	--}
+	return state
 stateStep (AddChar char) state = do
 	position <- getPosition
 	let (newState, maybePos) = addChar position char state
