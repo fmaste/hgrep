@@ -134,7 +134,7 @@ getLine (Position _ ln _) = ln
 
 incrementLine (Position n ln _) = Position n (ln + 1) initialColumn
 
-getColumnNumber (Position _ _ cl) = cl
+getColumn (Position _ _ cl) = cl
 
 incrementColumn (Position n ln cl) = Position n ln (cl + 1)
 
