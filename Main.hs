@@ -130,7 +130,7 @@ initialPosition name = Position name initialLine initialColumn
 
 getName (Position n _ _) = n
 
-getLineNumber (Position _ ln _) = ln
+getLine (Position _ ln _) = ln
 
 incrementLine (Position n ln _) = Position n (ln + 1) initialColumn
 
