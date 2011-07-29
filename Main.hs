@@ -11,6 +11,7 @@ module Main (
 
 -------------------------------------------------------------------------------
 
+import GHC.Exts
 import GHC.Prim
 import Data.Maybe
 import Data.Either
@@ -127,11 +128,11 @@ initialPosition name = Position name 1# 1#
 
 getName (Position n _ _) = n
 
-getLine (Position _ ln _) = ln
+getLine (Position _ ln _) = I# ln
 
 incrementLine (Position n ln _) = Position n (ln +# 1#) 1#
 
-getColumn (Position _ _ cl) = cl
+getColumn (Position _ _ cl) = I# cl
 
 incrementColumn (Position n ln cl) = Position n ln (cl +# 1#)
 
