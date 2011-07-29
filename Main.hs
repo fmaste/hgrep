@@ -115,28 +115,28 @@ instance MonadIO m => MonadIO (GrepM m) where
 
 -------------------------------------------------------------------------------
 
-type LineNumber = Int
+type Line = Int
 
-type ColumnNumber = Int
+type Column = Int
 
-data Position = Position {name :: String, lineNumber :: !LineNumber, columnNumber :: !ColumnNumber}
+newtype Position = Position (String, Line, Column)
 	deriving Show
 
 initialLine = 1
 
 initialColumn = 1
 
-initialPosition name = Position name initialLine initialColumn
+initialPosition name = Position (name, initialLine, initialColumn)
 
-getName (Position n _ _) = n
+getName (Position (n, _, _)) = n
 
-getLine (Position _ ln _) = ln
+getLine (Position (_, ln, _)) = ln
 
-incrementLine (Position n ln _) = Position n (ln + 1) initialColumn
+incrementLine (Position (n, ln, _)) = Position (n, (ln + 1), initialColumn)
 
-getColumn (Position _ _ cl) = cl
+getColumn (Position (_, _, cl)) = cl
 
-incrementColumn (Position n ln cl) = Position n ln (cl + 1)
+incrementColumn (Position (n, ln, cl)) = Position (n, ln, (cl + 1))
 
 -------------------------------------------------------------------------------
 
@@ -172,7 +172,7 @@ stateStep End state = return state
 initialState :: String -> GrepState
 initialState pattern = let
 	len = length pattern
-	counts = replicate len (Position "" 0 0, 0)
+	counts = replicate len $ (Position ("", 0, 0), 0)
 	in GrepState pattern len counts
 
 resetState :: Position -> GrepState -> GrepState
