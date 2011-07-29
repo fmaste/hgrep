@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances  #-}
+{-# LANGUAGE MultiParamTypeClasses, TypeSynonymInstances, MagicHash #-}
 module Main (
 	main,
 	GrepM,
@@ -11,6 +11,7 @@ module Main (
 
 -------------------------------------------------------------------------------
 
+import GHC.Prim
 import Data.Maybe
 import Data.Either
 import Data.List (foldr, foldl')
@@ -115,28 +116,24 @@ instance MonadIO m => MonadIO (GrepM m) where
 
 -------------------------------------------------------------------------------
 
-type Line = Int
+type Line = Int#
 
-type Column = Int
+type Column = Int#
 
-newtype Position = Position (String, Line, Column)
+data Position = Position String Line Column
 	deriving Show
 
-initialLine = 1
+initialPosition name = Position name 1# 1#
 
-initialColumn = 1
+getName (Position n _ _) = n
 
-initialPosition name = Position (name, initialLine, initialColumn)
+getLine (Position _ ln _) = ln
 
-getName (Position (n, _, _)) = n
+incrementLine (Position n ln _) = Position n (ln +# 1#) 1#
 
-getLine (Position (_, ln, _)) = ln
+getColumn (Position _ _ cl) = cl
 
-incrementLine (Position (n, ln, _)) = Position (n, (ln + 1), initialColumn)
-
-getColumn (Position (_, _, cl)) = cl
-
-incrementColumn (Position (n, ln, cl)) = Position (n, ln, (cl + 1))
+incrementColumn (Position n ln cl) = Position n ln (cl +# 1#)
 
 -------------------------------------------------------------------------------
 
@@ -172,7 +169,7 @@ stateStep End state = return state
 initialState :: String -> GrepState
 initialState pattern = let
 	len = length pattern
-	counts = replicate len $ (Position ("", 0, 0), 0)
+	counts = replicate len $ (Position "" 0# 0#, 0)
 	in GrepState pattern len counts
 
 resetState :: Position -> GrepState -> GrepState
