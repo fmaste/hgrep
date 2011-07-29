@@ -196,22 +196,22 @@ main = do
 	let state = initialState $ head args
 	if length args >= 2 
 		-- Take the first argument as the path if there is one.
-		then processPaths (tail args) state
+		then do
+			mVar <- newEmptyMVar
+			forkIO $ processPaths (tail args) state mVar
+			takeMVar mVar
 		-- If no argument process stdin.
 		else processHandle stdin (initialPosition "stdin") state
 	hFlush stderr
 	hFlush stdout
 
-processPaths :: [FilePath] -> GrepState -> IO ()
-processPaths filePaths state = do
-	mVars <- forM filePaths (\filePath -> do
-		mVar <- newEmptyMVar
-		forkIO $ processPath filePath state mVar
-		return mVar)
-	mapM_ takeMVar mVars
+processPaths :: [FilePath] -> GrepState -> MVar () -> IO ()
+processPaths filePaths state mVar = do
+	mapM_ (\filePath -> processPath filePath state) filePaths
+	putMVar mVar ()
 
-processPath :: FilePath -> GrepState -> MVar () -> IO ()
-processPath path state mVar = do
+processPath :: FilePath -> GrepState -> IO ()
+processPath path state = do
 	isDir <- doesDirectoryExist path
 	isFile <- doesFileExist path
 	if not $ isDir || isFile
@@ -223,7 +223,6 @@ processPath path state mVar = do
 				else if isDir 
 					then processDirPath path state
 					else processFilePath path state
-	putMVar mVar ()
 
 processDirPath :: FilePath -> GrepState -> IO ()
 processDirPath dirPath state = do
@@ -233,7 +232,10 @@ processDirPath dirPath state = do
 			hPutStrLn stderr $ "Skipping directory \"" ++ dirPath ++ "\": " ++ (show e)
 		Right paths -> do
 			let filteredPaths =  map ((dirPath ++ "/") ++) $ filter (flip notElem [".", ".."]) paths
-			processPaths filteredPaths state
+			mVar <- newEmptyMVar
+			forkIO $ processPaths filteredPaths state mVar
+			takeMVar mVar
+			return ()
 
 processFilePath :: FilePath -> GrepState -> IO ()
 processFilePath filePath state = do
