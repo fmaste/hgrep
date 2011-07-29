@@ -229,7 +229,7 @@ processDirPath dirPath state = do
 			hPutStrLn stderr $ "Skipping directory \"" ++ dirPath ++ "\": " ++ (show e)
 		Right paths -> do
 			let filteredPaths =  map ((dirPath ++ "/") ++) $ filter (flip notElem [".", ".."]) paths
-			dirContentsList <- sequence $ map (\p -> processPath p state) filteredPaths
+			mapM_ (\p -> processPath p state) filteredPaths
 			return ()
 
 processFilePath :: FilePath -> GrepState -> IO ()
