@@ -121,6 +121,7 @@ type Line = Int#
 
 type Column = Int#
 
+-- TODO: Make the unboxing automatic with the UNPACK pragma!
 data Position = Position String Line Column
 
 instance Show Position where
