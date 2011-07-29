@@ -127,7 +127,7 @@ getName (Position n _ _) = n
 
 getLineNumber (Position _ ln _) = ln
 
-incrementLine (Position n ln _) = Position n (ln + 1) 0
+incrementLine (Position n ln _) = Position n (ln + 1) 1
 
 getColumnNumber (Position _ _ cl) = cl
 
