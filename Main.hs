@@ -118,31 +118,20 @@ type LineNumber = Int
 
 type ColumnNumber = Int
 
-data Position = 
-	-- A file to parse.
-	File {fileName :: FilePath, lineNumber :: LineNumber, columnNumber :: ColumnNumber}
-	-- Parsing stdin.
-	| Stdin {lineNumber :: LineNumber, columnNumber :: ColumnNumber}
+data Position = Position {name :: String, lineNumber :: !LineNumber, columnNumber :: !ColumnNumber}
 	deriving Show
 
-initialStdinPosition = Stdin 1 1
+initialPosition name = Position name 1 1
 
-initialFilePosition path = File path 1 1
+getName (Position n _ _) = n
 
-getFileName (Stdin _ _) = "Standard input"
-getFileName (File fp _ _) = fp
+getLineNumber (Position _ ln _) = ln
 
-getLineNumber (Stdin ln _) = ln
-getLineNumber (File _ ln _) = ln
+incrementLine (Position n ln _) = Position n (ln + 1) 0
 
-incrementLine (Stdin ln cl) = Stdin (ln + 1) cl
-incrementLine (File fp ln cl) = File fp (ln + 1) cl
+getColumnNumber (Position _ _ cl) = cl
 
-getColumnNumber (Stdin _ cl) = cl
-getColumnNumber (File _ _ cl) = cl
-
-incrementColumn (Stdin ln cl) = Stdin ln (cl + 1)
-incrementColumn (File fp ln cl) = File fp ln (cl + 1)
+incrementColumn (Position n ln cl) = Position n ln (cl + 1)
 
 -------------------------------------------------------------------------------
 
@@ -178,7 +167,7 @@ stateStep End state = return state
 initialState :: String -> GrepState
 initialState pattern = let
 	len = length pattern
-	counts = replicate len (File "" 0 0, 0)
+	counts = replicate len (Position "" 0 0, 0)
 	in GrepState pattern len counts
 
 resetState :: Position -> GrepState -> GrepState
@@ -203,7 +192,7 @@ main = do
 		-- Take the first argument as the path if there is one.
 		then processPaths (tail args) state
 		-- If no argument process stdin.
-		else processHandle stdin initialStdinPosition state
+		else processHandle stdin (initialPosition "stdin") state
 	hFlush stderr
 	hFlush stdout
 
@@ -247,7 +236,7 @@ processFilePath filePath state = do
 		Left e -> do
 			 hPutStrLn stderr $ "Skipping file \"" ++ filePath ++ "\": " ++ (show e)
 		Right content -> do
-			processContent content (initialFilePosition filePath) state
+			processContent content (initialPosition filePath) state
 
 processHandle :: Handle -> Position -> GrepState -> IO ()
 processHandle handle position state = do
