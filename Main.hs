@@ -187,9 +187,7 @@ resetState pos (GrepState pattern len _) = GrepState pattern len (replicate len 
 addChar :: Position -> Char -> GrepState -> (GrepState, Maybe Position)
 addChar addedPos addedChar (GrepState pattern len counts) = let 
 	outCounts = map f $ zip pattern ((addedPos, 0):counts) where
-		f (actualChar, (actualPos, actualEqs)) = 
-			let actualEqs' = if actualChar == addedChar then (actualEqs + 1) else actualEqs
-			in (actualPos, actualEqs')
+		f (actualChar, (actualPos, actualEqs)) = (actualPos, if actualChar == addedChar then (actualEqs + 1) else actualEqs)
 	(lastPos, lastEqs) = last outCounts
 	maybePos = if lastEqs == len then (Just lastPos) else Nothing
 	in (GrepState pattern len outCounts, maybePos)
