@@ -18,7 +18,6 @@ import Data.Either
 import Data.List (foldr, foldl')
 import Data.Monoid
 import Control.Monad
-import Control.Monad.Trans (MonadTrans(..))
 import Control.Monad.Error (MonadError(..))
 import Control.Monad.IO.Class (MonadIO(..))
 import Control.OldException
@@ -59,6 +58,13 @@ bind m f = GrepM $ \p s -> do
 		Right a -> runGrepM (f a) p' s'
 		Left e' -> return (Left e', p', s')
 
+-- Access to the inner monad (like MonadTrans class on the mtl/transformers package)
+
+lift :: Monad m => m a -> GrepM m a
+lift m = GrepM $ \p s -> do 
+	a <- m 
+	return (Right a, p, s)
+
 -- Position as a state monad
 
 getPosition :: Monad m => GrepM m Position
@@ -97,11 +103,6 @@ modifyStateM f = do
 	s <- getState
 	s' <- f s
 	setState s'
-
-instance MonadTrans GrepM where
-	lift m = GrepM $ \p s -> do
-		a <- m
-		return (Right a, p, s)
 
 instance Monad m => MonadError GrepError (GrepM m) where
 	throwError e = GrepM $ \p s -> return (Left e, p, s)
