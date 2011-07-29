@@ -230,7 +230,6 @@ processDirPath dirPath state = do
 		Right paths -> do
 			let filteredPaths =  map ((dirPath ++ "/") ++) $ filter (flip notElem [".", ".."]) paths
 			mapM_ (\p -> processPath p state) filteredPaths
-			return ()
 
 processFilePath :: FilePath -> GrepState -> IO ()
 processFilePath filePath state = do
