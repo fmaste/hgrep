@@ -122,17 +122,19 @@ type Line = Int#
 type Column = Int#
 
 data Position = Position String Line Column
-	deriving Show
+
+instance Show Position where
+	show pos = (getName pos) ++ "(" ++ (show $ getLineNumber pos) ++ "," ++ (show $ getColumnNumber pos) ++ ")"
 
 initialPosition name = Position name 1# 1#
 
 getName (Position n _ _) = n
 
-getLine (Position _ ln _) = I# ln
+getLineNumber (Position _ ln _) = I# ln
 
 incrementLine (Position n ln _) = Position n (ln +# 1#) 1#
 
-getColumn (Position _ _ cl) = I# cl
+getColumnNumber (Position _ _ cl) = I# cl
 
 incrementColumn (Position n ln cl) = Position n ln (cl +# 1#)
 
