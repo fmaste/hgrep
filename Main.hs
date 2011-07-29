@@ -64,7 +64,8 @@ getPosition :: Monad m => GrepM m Position
 getPosition = GrepM $ \p s -> return (Right p, p, s)
 
 setPosition :: Monad m => Position -> GrepM m ()
-setPosition p = GrepM $ \_ s -> return (Right (), p, s)
+-- Strictness needed otherwise it is never evaluated until a match is found!
+setPosition p = GrepM $ \_ s -> seq p $ return (Right (), p, s)
 
 modifyPosition :: MonadIO m => (Position -> Position) -> GrepM m ()
 modifyPosition f = do
