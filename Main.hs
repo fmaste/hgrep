@@ -207,6 +207,9 @@ main = do
 		-- If no argument process stdin.
 		else processHandle stdin initialStdinPosition state
 
+processPaths :: [FilePath] -> GrepState -> IO ()
+processPaths filePaths state = mapM_ (\p -> processPath p state) filePaths
+
 processPath :: FilePath -> GrepState -> IO ()
 processPath path state = do
 	isDir <- doesDirectoryExist path
@@ -229,7 +232,7 @@ processDirPath dirPath state = do
 			hPutStrLn stderr $ "Skipping directory \"" ++ dirPath ++ "\": " ++ (show e)
 		Right paths -> do
 			let filteredPaths =  map ((dirPath ++ "/") ++) $ filter (flip notElem [".", ".."]) paths
-			mapM_ (\p -> processPath p state) filteredPaths
+			processPaths filteredPaths state
 
 processFilePath :: FilePath -> GrepState -> IO ()
 processFilePath filePath state = do
