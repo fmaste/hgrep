@@ -126,7 +126,7 @@ data Position = Position !String Line Column
 instance Show Position where
 	show pos = (getName pos) ++ "(" ++ (show $ getLineNumber pos) ++ "," ++ (show $ getColumnNumber pos) ++ ")"
 
-initialPosition name = Position name 1# 1#
+newPosition name = Position name 1# 1#
 
 getName (Position n _ _) = n
 
@@ -200,7 +200,7 @@ main = do
 			forkIO $ processPaths (tail args) state mVar
 			takeMVar mVar
 		-- If no argument process stdin.
-		else processHandle stdin (initialPosition "stdin") state
+		else processHandle stdin (newPosition "stdin") state
 	hFlush stderr
 	hFlush stdout
 
@@ -243,7 +243,7 @@ processFilePath filePath state = do
 		Left e -> do
 			 hPutStrLn stderr $ "Skipping file \"" ++ filePath ++ "\": " ++ (show e)
 		Right content -> do
-			processContent content (initialPosition filePath) state
+			processContent content (newPosition filePath) state
 
 processHandle :: Handle -> Position -> GrepState -> IO ()
 processHandle handle position state = do
