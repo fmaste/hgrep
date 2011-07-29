@@ -30,7 +30,7 @@ import Control.Concurrent
 -- sudo cabal upgrade mtl
 -- For profiling: cabal install transformers mtl parallel --enable-library-profiling --reinstall
 import System (getArgs)
-import System.IO (Handle, stdin, stderr, hPutStrLn)
+import System.IO (Handle, stdin, stdout, stderr, hPutStrLn, hFlush)
 import System.Directory (doesDirectoryExist, doesFileExist, getPermissions, Permissions(..), getDirectoryContents)
 import qualified Data.ByteString.Lazy.Char8 as BS
 
@@ -206,12 +206,19 @@ main = do
 		then processPaths (tail args) state
 		-- If no argument process stdin.
 		else processHandle stdin initialStdinPosition state
+	hFlush stderr
+	hFlush stdout
 
 processPaths :: [FilePath] -> GrepState -> IO ()
-processPaths filePaths state = mapM_ (\p -> processPath p state) filePaths
+processPaths filePaths state = do
+	mVars <- forM filePaths (\filePath -> do
+		mVar <- newEmptyMVar
+		forkIO $ processPath filePath state mVar
+		return mVar)
+	mapM_ takeMVar mVars
 
-processPath :: FilePath -> GrepState -> IO ()
-processPath path state = do
+processPath :: FilePath -> GrepState -> MVar () -> IO ()
+processPath path state mVar = do
 	isDir <- doesDirectoryExist path
 	isFile <- doesFileExist path
 	if not $ isDir || isFile
@@ -223,6 +230,7 @@ processPath path state = do
 				else if isDir 
 					then processDirPath path state
 					else processFilePath path state
+	putMVar mVar ()
 
 processDirPath :: FilePath -> GrepState -> IO ()
 processDirPath dirPath state = do
