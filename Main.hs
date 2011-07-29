@@ -122,13 +122,17 @@ type ColumnNumber = Int
 data Position = Position {name :: String, lineNumber :: !LineNumber, columnNumber :: !ColumnNumber}
 	deriving Show
 
-initialPosition name = Position name 1 1
+initialLine = 1
+
+initialColumn = 1
+
+initialPosition name = Position name initialLine initialColumn
 
 getName (Position n _ _) = n
 
 getLineNumber (Position _ ln _) = ln
 
-incrementLine (Position n ln _) = Position n (ln + 1) 1
+incrementLine (Position n ln _) = Position n (ln + 1) initialColumn
 
 getColumnNumber (Position _ _ cl) = cl
 
