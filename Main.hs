@@ -203,7 +203,7 @@ main = do
 	let state = initialState $ head args
 	if length args >= 2 
 		-- Take the first argument as the path if there is one.
-		then processPath (args !! 1) state
+		then processPaths (tail args) state
 		-- If no argument process stdin.
 		else processHandle stdin initialStdinPosition state
 
