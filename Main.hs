@@ -122,7 +122,7 @@ type Line = Int#
 type Column = Int#
 
 -- TODO: Make the unboxing automatic with the UNPACK pragma!
-data Position = Position String Line Column
+data Position = Position !String Line Column
 
 instance Show Position where
 	show pos = (getName pos) ++ "(" ++ (show $ getLineNumber pos) ++ "," ++ (show $ getColumnNumber pos) ++ ")"
