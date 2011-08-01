@@ -36,8 +36,6 @@ import qualified Data.ByteString.Lazy.Char8 as BS
 
 -------------------------------------------------------------------------------
 
-type GrepError = String
-
 -- The Grep Monad has:
 -- A Reader that allows to have as environment the actual position in a file.
 -- A Writer to log messages.
@@ -114,6 +112,10 @@ instance Monad m => MonadError GrepError (GrepM m) where
 
 instance MonadIO m => MonadIO (GrepM m) where
 	liftIO = lift . liftIO
+
+-------------------------------------------------------------------------------
+
+type GrepError = String
 
 -------------------------------------------------------------------------------
 
