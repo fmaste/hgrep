@@ -269,7 +269,10 @@ processContent content position state = do
 	-- mapM_ putStrLn $ log
 
 readLines :: BS.ByteString -> GrepM IO ()
-readLines content = mapM_ readLine $ BS.lines content
+readLines content = do
+	modifyStateM (stateStep Start)
+	mapM_ readLine $ BS.lines content
+	modifyStateM (stateStep End)
 
 readLine :: BS.ByteString -> GrepM IO ()
 readLine line = do
