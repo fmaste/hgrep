@@ -125,7 +125,7 @@ type Column = Int#
 data Position = Position !String Line Column
 
 instance Show Position where
-	show pos = (getName pos) ++ "(" ++ (show $ getLineNumber pos) ++ "," ++ (show $ getColumnNumber pos) ++ ")"
+	show pos = (getName pos) ++ " (" ++ (show $ getLineNumber pos) ++ "," ++ (show $ getColumnNumber pos) ++ ")"
 
 newPosition name = Position name 1# 1#
 
