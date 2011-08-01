@@ -268,16 +268,16 @@ processContent content position state = do
 	-- TODO: Create a log a Writer monad
 	-- mapM_ putStrLn $ log
 
-readLines :: MonadIO m => BS.ByteString -> GrepM m ()
+readLines :: BS.ByteString -> GrepM IO ()
 readLines content = mapM_ readLine $ BS.lines content
 
-readLine :: MonadIO m => BS.ByteString -> GrepM m ()
+readLine :: BS.ByteString -> GrepM IO ()
 readLine line = do
 	modifyStateM (stateStep NewLine)
 	readColumns line
 	modifyPosition incrementLine
 
-readColumns :: MonadIO m => BS.ByteString -> GrepM m ()
+readColumns :: BS.ByteString -> GrepM IO ()
 readColumns columns
 	| BS.null columns = return ()
 	| otherwise = do
@@ -285,7 +285,7 @@ readColumns columns
 		modifyPosition incrementColumn
 		readColumns $ BS.tail columns
 
-readColumn :: MonadIO m => Char -> GrepM m ()
+readColumn :: Char -> GrepM IO ()
 readColumn column = modifyStateM (stateStep (AddChar column))
 
 {-- 
