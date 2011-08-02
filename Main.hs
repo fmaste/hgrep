@@ -45,7 +45,8 @@ import qualified Data.ByteString.Lazy.Char8 as BS
 newtype GrepM p s m a = GrepM {runGrepM :: p -> s -> m (Either GrepError a, p, s)}
 
 instance Functor m => Functor (GrepM p s m) where
-	fmap f m = GrepM $ \p s -> fmap (\(err, p', s') -> (fmap f err, p', s')) $ runGrepM m p s
+	fmap f m = GrepM $ \p s -> 
+		fmap (\(err, p', s') -> (fmap f err, p', s')) $ runGrepM m p s
 
 instance Monad m => Monad (GrepM p s m) where
 	return a = GrepM $ \p s -> return (Right a, p, s)
