@@ -22,6 +22,7 @@ import Control.Monad.Error (MonadError(..))
 import Control.Monad.IO.Class (MonadIO(..))
 import Control.OldException
 import Control.Concurrent
+import Control.Applicative
 -- "sudo ghc-pkg expose transformers" was needed.
 -- See: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=626985
 -- And: http://stackoverflow.com/questions/5252066/why-is-package-hidden-by-default-and-how-can-i-unhide-it
@@ -47,6 +48,13 @@ newtype GrepM p s m a = GrepM {runGrepM :: p -> s -> m (Either GrepError a, p, s
 instance Functor m => Functor (GrepM p s m) where
 	fmap f m = GrepM $ \p s -> 
 		fmap (\(err, p', s') -> (fmap f err, p', s')) $ runGrepM m p s
+
+{-
+instance Applicative m => Applicative (GrepM p s m) where
+	pure a = GrepM $ \p s -> pure (Right a, p, s)
+	ff <*> fa = GrepM $ \p s -> 
+		((pure $ \mf -> ((pure mf) <*>)) <*> (runGrepM ff p s)) <*> (runGrepM fa p s)
+-}
 
 instance Monad m => Monad (GrepM p s m) where
 	return a = GrepM $ \p s -> return (Right a, p, s)
