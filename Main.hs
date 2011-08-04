@@ -56,6 +56,17 @@ instance Applicative m => Applicative (GrepM p s m) where
 		((pure $ \mf -> ((pure mf) <*>)) <*> (runGrepM ff p s)) <*> (runGrepM fa p s)
 -}
 
+{-
+Law 1: 
+	(return x) >>= f ≡ f x
+	do { v <- return x; f v } ≡ do { f x }
+Law 2: 
+	m >>= return ≡ m
+	do { v <- m; return v } ≡ do { m }
+Law 3: 
+	(m >>= f) >>= g ≡ m >>= ( \x -> (f x >>= g) )
+	do { x <- m; y <- f x; g y } ≡ do { y <- do { x <- m; f x }; g y }
+-}
 instance Monad m => Monad (GrepM p s m) where
 	return a = GrepM $ \p s -> return (Right a, p, s)
 	m >>= f = bind m f
