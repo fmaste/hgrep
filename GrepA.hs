@@ -80,6 +80,5 @@ instance ArrowLoop GrepA where
 delay :: b -> GrepA b b
 delay b = GrepA (b:)
 
-newtype Automaton b c = Automaton (b -> (c, Automaton b c))
 
 
