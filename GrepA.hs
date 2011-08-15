@@ -6,6 +6,7 @@ module GrepA () where
 import Prelude hiding (id,(.)) -- Using id and . from Category
 import Control.Category
 import Control.Arrow
+import Data.Either
 
 -------------------------------------------------------------------------------
 
@@ -52,6 +53,22 @@ instance ArrowZero GrepA where
 
 instance ArrowPlus GrepA where
 	(GrepA f) <+> (GrepA g) = GrepA $ \bs -> 
+-}
+
+{-
+instance ArrowChoice GrepA where
+
+	-- left :: a b c -> a (Either b d) (Either c d)
+	left (GrepA f) = GrepA $ map (either (Right . f) (Left . id))
+
+	-- right :: a b c -> a (Either d b) (Either d c)
+	right (GrepA f) = GrepA $ either (Left . id) (Right . f)
+
+	-- (+++) :: a b c -> a b' c' -> a (Either b b') (Either c c')
+	(GrepA f) +++ (GrepA g) = GrepA $ either (Right . f) (Left . g)
+
+	-- (|||) :: a b d -> a c d -> a (Either b c) d
+	(GrepA f) ||| (GrepA g) = GrepA $ either f g
 -}
 
 instance ArrowLoop GrepA where
