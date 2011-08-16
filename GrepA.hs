@@ -10,9 +10,7 @@ import Data.Either
 
 -------------------------------------------------------------------------------
 
-type Stream a = [a]
-
-newtype GrepA b c = GrepA {runGrepA :: (Stream b) -> (Stream c)}
+newtype GrepA b c = GrepA {runGrepA :: [b] -> [c]}
 
 instance Category GrepA where
 	
