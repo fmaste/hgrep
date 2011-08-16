@@ -3,7 +3,7 @@ module GrepA () where
 
 -------------------------------------------------------------------------------
 
-import Prelude hiding (id,(.)) -- Using id and . from Category
+import Prelude hiding (id, (.)) -- Using id and . from Category
 import Control.Category
 import Control.Arrow
 import Data.Either
