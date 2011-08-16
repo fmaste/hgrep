@@ -84,10 +84,10 @@ data Position = Position Int Int
 	deriving Show
 
 updatePosition :: GrepA (Char, Position) Position
-updatePosition = arr $ \(w, (Position l c)) -> if w == '\n' then Position (l + 1) 1 else Position l (c + 1)
+updatePosition = arr $ \(w, (Position l c)) -> if w == '\n' then Position (l + 1) 0 else Position l (c + 1)
 
 parsePosition :: GrepA Char Position
-parsePosition = loop (updatePosition >>> (arr id &&& delay (Position 1 1)))
+parsePosition = loop (updatePosition >>> (arr id &&& delay (Position 0 0)))
 
 parseChar :: GrepA Char Char
 parseChar = arr id
