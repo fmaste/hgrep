@@ -51,9 +51,9 @@ instance Category Stream where
         id = get $ \b -> put b id
 
         -- (.) :: cat b c -> cat a b -> cat a c
-	stream . (Get f) = get $ \b -> stream . f b
 	(Put c s) . stream = put c (s . stream)
-	(Get f) . (Put c s) = f c . s 
+	(Get f) . (Put c s) = f c . s
+	stream . (Get f) = get $ \b -> stream . f b
 
 instance Arrow GrepA where
 
