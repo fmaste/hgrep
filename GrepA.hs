@@ -12,6 +12,31 @@ import Data.Either
 
 newtype GrepA b c = GrepA {runGrepA :: [b] -> [c]}
 
+-- Another way to represent stream processors is using the datatype:
+data Stream b c = Put c (Stream b c) | Get (b -> Stream b c)
+-- where Put b f represents a stream processor that is ready to output c and
+-- continue with f, and Get k represents a stream processor waiting for an
+-- input b, which will continue by passing it to k.
+-- Stream processors are them constructed using operators
+put :: c -> Stream b c -> Stream b c
+put = Put
+-- which constructs a stream processor which outputs the b and them behaves
+-- like the second argument, and
+get :: (b -> Stream b c) -> Stream b c
+get = Get
+-- which constructs a stream processor which waits for an input, passes it
+-- to its function argument, and them behaves like the result.
+-- Stream processors can be interpreted as stream functions by the function:
+runStream :: Stream b c -> [b] -> [c]
+runStream (Put c s) bs 	   = c : runStream s bs
+runStream (Get k)   (b:bs) = runStream (k b) bs
+runStream (Get k)   [] 	   = []
+-- We concern ourselfs for the time being with processes that have one input
+-- channel and one output channel. 
+-- For simplicity we shall only consider non-terminating (recursively defined) 
+-- stream processors; otherwise we would add another operator to construct a
+-- stream processor which halts.
+
 instance Category GrepA where
 	
 	-- id :: cat a a
@@ -19,6 +44,16 @@ instance Category GrepA where
 
 	-- (.) :: cat b c -> cat a b -> cat a c
 	(GrepA f) . (GrepA g) = GrepA (f . g)
+
+instance Category Stream where
+
+        -- id :: cat a a
+        id = get $ \b -> put b id
+
+        -- (.) :: cat b c -> cat a b -> cat a c
+	stream . (Get f) = get $ \b -> stream . f b
+	(Put c s) . stream = put c (s . stream)
+	(Get f) . (Put c s) = f c . s 
 
 instance Arrow GrepA where
 
