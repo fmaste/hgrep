@@ -49,6 +49,7 @@ instance Category GrepA where
 instance Category Stream where
 
         -- id :: cat a a
+	-- Get something them put it back and continue doing the same.
         id = get $ \b -> put b id
 
         -- (.) :: cat b c -> cat a b -> cat a c
