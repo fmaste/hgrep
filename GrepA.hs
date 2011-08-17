@@ -17,7 +17,8 @@ data Stream b c = Put c (Stream b c) | Get (b -> Stream b c)
 -- where Put b f represents a stream processor that is ready to output c and
 -- continue with f, and Get k represents a stream processor waiting for an
 -- input b, which will continue by passing it to k.
--- Stream processors are them constructed using operators
+-- Stream processors are them constructed using the following continuation 
+-- style operations for these actions:
 put :: c -> Stream b c -> Stream b c
 put = Put
 -- which constructs a stream processor which outputs the b and them behaves
