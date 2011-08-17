@@ -83,6 +83,25 @@ instance Arrow GrepA where
 	-- (GrepA f) &&& (GrepA g) = GrepA $ f &&& g >>> uncurry zip
 
 {-
+instance Arrow Stream where
+
+	-- arr :: (b -> c) -> a b c
+	arr f = get $ \b -> put (f b) (arr f)
+	-- Builds a stateless process that just applies a given function to its input to
+	-- to produce its outputs.
+
+	-- first :: a b c -> a (b, d) (c, d)
+	first (GrepA f) = GrepA $ \bds -> let (bs, ds) = unzip bds in zip (f bs) ds
+
+	-- second :: a b c -> a (d, b) (d, c)
+	second (GrepA f) = GrepA $ \dbs -> let (ds, bs) = unzip dbs in zip ds (f bs)
+
+	-- (***) :: a b c -> a b' c' -> a (b, b') (c, c')
+	(GrepA f) *** (GrepA g) = GrepA $ \bbs -> let (bs, bs') = unzip bbs in zip (f bs) (g bs')
+
+	-- (&&&) :: a b c -> a b c' -> a b (c, c')
+	(GrepA f) &&& (GrepA g) = GrepA $ \bs -> zip (f bs) (g bs)
+-}
 
 constStream :: c -> Stream b c
 constStream c = get $ \b -> put c (constStream c)
@@ -96,6 +115,7 @@ filterStream f = get $ \b -> if f b then put b (filterStream f) else (filterStre
 nullStream :: Stream b c
 nullStream = get $ \b -> nullStream
 
+{-
 instance ArrowZero GrepA where
 	zeroArrow = GrepA $ \_ -> []
 
