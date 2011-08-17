@@ -52,7 +52,7 @@ instance Category Stream where
 	-- Get something them put it back and continue doing the same.
         id = get $ \b -> put b id
 
-        -- (.) :: cat b c -> cat a b -> cat a c
+        -- (.) :: cat d c -> cat b d -> cat b c
 	(Put c s) . stream = put c (s . stream)
 	(Get f) . (Put c s) = f c . s
 	stream . (Get f) = get $ \b -> stream . f b
