@@ -83,6 +83,19 @@ instance Arrow GrepA where
 	-- (GrepA f) &&& (GrepA g) = GrepA $ f &&& g >>> uncurry zip
 
 {-
+
+constStream :: c -> Stream b c
+constStream c = get $ \b -> put c (constStream c)
+
+mapStream :: (b -> c) -> Stream b c
+mapStream f = get $ \b -> put (f b) $ mapStream f
+
+filterStream :: (b -> Bool) -> Stream b b
+filterStream f = get $ \b -> if f b then put b (filterStream f) else (filterStream f)
+
+nullStream :: Stream b c
+nullStream = get $ \b -> nullStream
+
 instance ArrowZero GrepA where
 	zeroArrow = GrepA $ \_ -> []
 
