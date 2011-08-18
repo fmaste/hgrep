@@ -82,7 +82,6 @@ instance Arrow GrepA where
 	-- Can also be defined as: 
 	-- (GrepA f) &&& (GrepA g) = GrepA $ f &&& g >>> uncurry zip
 
-{-
 instance Arrow Stream where
 
 	-- arr :: (b -> c) -> a b c
@@ -91,17 +90,28 @@ instance Arrow Stream where
 	-- to produce its outputs.
 
 	-- first :: a b c -> a (b, d) (c, d)
-	first (GrepA f) = GrepA $ \bds -> let (bs, ds) = unzip bds in zip (f bs) ds
+	first s = bypass [] s where
+		bypass ds (Get f) = get $ \(b, d) -> bypass (ds ++ [d]) (f b)
+		bypass (d : ds) (Put c s) = put (c, d) (bypass ds s)
+		bypass [] (Put c s) = get $ \(b, d) -> put (c, d) (bypass [] s)
+	-- runStream (first (get $ \b -> id)) [(1, 'a'), (2, 'b')]  :=:  [(2,'a')]
+	-- runStream (first (put 0 id)) [(1, 'a'), (2, 'b')]  :=:  [(0,'a'),(2,'b')]
+	-- runStream (first (get $ \b -> put 0 id)) [(1, 'a'), (2, 'b')]  :=:  [(0,'a'),(2,'b')]
+	-- runStream (first (put 0 $ get $ \b -> id)) [(1, 'a'), (2, 'b')]  :=:  [(0,'a')]
 
 	-- second :: a b c -> a (d, b) (d, c)
-	second (GrepA f) = GrepA $ \dbs -> let (ds, bs) = unzip dbs in zip ds (f bs)
+	-- Using default: 
+	-- arr swap >>> first f >>> arr swap
+	-- 	where 	swap :: (x,y) -> (y,x)
+	-- 		swap ~(x,y) = (y,x)
 
 	-- (***) :: a b c -> a b' c' -> a (b, b') (c, c')
-	(GrepA f) *** (GrepA g) = GrepA $ \bbs -> let (bs, bs') = unzip bbs in zip (f bs) (g bs')
+	-- Using default: 
+	-- f *** g = first f >>> second g
 
 	-- (&&&) :: a b c -> a b c' -> a b (c, c')
-	(GrepA f) &&& (GrepA g) = GrepA $ \bs -> zip (f bs) (g bs)
--}
+	-- Using default: 
+	-- f &&& g = arr (\b -> (b,b)) >>> f *** g
 
 constStream :: c -> Stream b c
 constStream c = get $ \b -> put c (constStream c)
