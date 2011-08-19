@@ -52,6 +52,12 @@ instance Category Stream where
 	(Get f) . (Put d s) = (f d) . s
 	(Get f) . (Get g) = get $ \b -> (get f) . (g b)
 
+-- (>>>) :: a b d -> a d c -> a b c
+-- f >>> g = g . f
+
+-- (<<<) :: a d c -> a b d -> a b c
+-- f <<< g = f . g
+
 -------------------------------------------------------------------------------
 
 instance Arrow Stream where
