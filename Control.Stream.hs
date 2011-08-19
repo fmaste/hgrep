@@ -41,8 +41,8 @@ runStream (Get k)   []     = []
 instance Category Stream where
 
 	-- id :: cat a a
-	-- Get something them put it back and continue doing the same.
 	-- Redirects the whole stream to the output untouched.
+	-- Get something them put it back and continue doing the same.
 	id = get $ \b -> put b id
 
 	-- (.) :: cat d c -> cat b d -> cat b c
