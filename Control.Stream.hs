@@ -87,6 +87,8 @@ instance Arrow Stream where
 
 -------------------------------------------------------------------------------
 
+-- Monoid operations:
+
 instance ArrowZero Stream where
 
 	-- zeroArrow :: a b c
@@ -95,8 +97,6 @@ instance ArrowZero Stream where
 	-- a failing process simply consumes all input and never produces 
 	-- more output.
 	zeroArrow = get $ \_ -> zeroArrow
-
--------------------------------------------------------------------------------
 
 instance ArrowPlus Stream where
 
@@ -109,6 +109,13 @@ instance ArrowPlus Stream where
 	s <+> (Put c s') = put c (s <+> s') 
 	(Get f) <+> (Get g) = get $ \b -> (f c) <+> (g c)
 
+-- This definitions satisfy this monoidal laws:
+-- zeroArrow <+> q = q
+-- p <+> zeroArrow = p
+-- (p <+> q) <+> r = p <+> (q <+> r)
+-- And also this choice and failure laws:
+-- zeroArrow . q = zeroArrow (The same as zeroArrow <<< q or q >>> zeroArrow)
+-- p . zeroArrow = zeroArrow (The same as p <<< zeroArrow or zeroArrow >>> p)
 -------------------------------------------------------------------------------
 
 
