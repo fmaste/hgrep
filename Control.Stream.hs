@@ -185,3 +185,13 @@ constStream c = get $ \b -> put c (constStream c)
 filterStream :: (b -> Bool) -> Stream b b
 filterStream f = get $ \b -> if f b then put b (filterStream f) else (filterStream f)
 
+{-
+arrAccum :: (acc -> b -> (c)) -> acc -> Stream b c
+arrAccum f acc = get $ \b -> let (acc',c) = f acc b in put c (arrAccum f acc')
+-}
+
+data Position = Position Int Int
+	deriving Show
+
+updatePosition (Position ln cl) char = if char == '\n' then (Position (ln+1) 1) else (Position ln (cl+1))
+
