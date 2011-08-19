@@ -177,4 +177,11 @@ instance ArrowChoice Stream where
 
 -------------------------------------------------------------------------------
 
+-- Stream utility functions:
+
+constStream :: c -> Stream b c
+constStream c = get $ \b -> put c (constStream c)
+
+filterStream :: (b -> Bool) -> Stream b b
+filterStream f = get $ \b -> if f b then put b (filterStream f) else (filterStream f)
 
