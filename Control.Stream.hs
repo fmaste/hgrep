@@ -116,6 +116,56 @@ instance ArrowPlus Stream where
 -- And also this choice and failure laws:
 -- zeroArrow . q = zeroArrow (The same as zeroArrow <<< q or q >>> zeroArrow)
 -- p . zeroArrow = zeroArrow (The same as p <<< zeroArrow or zeroArrow >>> p)
+
+-------------------------------------------------------------------------------
+
+-- Stream processors can also support dynamic choice.
+-- f ||| g can be seen as another kind of parellel composition. 
+-- This class underlies the if and case constructs in arrow notation. 
+
+instance ArrowChoice Stream where
+
+	-- left :: a b c -> a (Either b d) (Either c d)
+	-- Converts the process on one that passes messages tagged Left 
+	-- through it while the Right ones are passed untouched.
+	left (Put c s) = put (Left c) (left s)
+	left (Get f) = get $ either 
+				(\b -> left (f b)) 
+				(\d -> put (Right d) (left $ get f))
+
+	-- right :: a b c -> a (Either d b) (Either d c)
+	-- A mirror image of 'left'.
+	-- Using default:
+	-- right f = arr mirror >>> left f >>> arr mirror
+	-- 	where	mirror :: Either x y -> Either y x
+	--		mirror (Left x) = Right x
+	--		mirror (Right y) = Left y
+
+	-- (+++) :: a b c -> a b' c' -> a (Either b b') (Either c c')
+	-- Split the input between the two argument arrows, retagging and
+	-- merging their outputs.
+	-- Using default:
+	-- f +++ g = left f >>> right g
+
+	-- (|||) :: a b d -> a b' d -> a (Either b b') d
+	-- Fanin: Split the input between the two argument arrows and merge
+	-- their outputs.
+	-- Usign default:
+	-- f ||| g = f +++ g >>> arr untag
+	--	where	untag (Left x) = x
+	--		untag (Right y) = y
+
+-- With these definitions, then f ||| g can be regarded as yet another kind of
+-- parellel composition, which routes inputs tagged Left to f and inputs tagged
+-- Right to g.
+-- In fact, although stream processors have only one input and one output 
+-- channel, we can model processes with many of each by multiplexing several
+-- channeld onto one. For example, we can regard a channel carrying messages 
+-- of type Either a b as a representation for two channels, one carrying as and 
+-- the other carrying bs. With this viewpoint, f ||| g combines f and g in 
+-- parallel to yield a stream processor with two input channels (multiplexed 
+-- onto one), and merges the output channeld onto one. 
+
 -------------------------------------------------------------------------------
 
 
