@@ -177,6 +177,16 @@ instance ArrowChoice Stream where
 
 -------------------------------------------------------------------------------
 
+{-
+instance ArrowLoop Stream where
+
+	-- loop :: a (b, d) (c, d) -> a b c
+	loop (Put (c,d) s) = 
+	loop (Get f) = get $ \
+-}
+
+-------------------------------------------------------------------------------
+
 -- Stream utility functions:
 
 constStream :: c -> Stream b c
