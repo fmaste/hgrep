@@ -100,6 +100,7 @@ instance ArrowZero Stream where
 instance ArrowPlus Stream where
 
 	-- (<+>) :: a b c -> a b c -> a b c
+	-- Parallel composition of stream processes.
 	-- We define p <+> q to run in parallel, merging their outputs.
 	-- All the Puts are done prioritizing p, when no more Puts are available
 	-- an input is read and given to p and them to q in parallel.
