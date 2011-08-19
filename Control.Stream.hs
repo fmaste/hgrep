@@ -85,4 +85,26 @@ instance Arrow Stream where
 
 -------------------------------------------------------------------------------
 
+instance ArrowZero Stream where
+
+	-- zeroArrow :: a b c
+	-- Stream processor also support the natural notion of failure:
+	-- a failing process simply consumes all input and never produces 
+	-- more output.
+	zeroArrow = get $ \_ -> zeroArrow
+
+-------------------------------------------------------------------------------
+
+instance ArrowPlus Stream where
+
+	-- (<+>) :: a b c -> a b c -> a b c
+	-- We define p <+> q to run in parallel, merging their outputs.
+	-- All the Puts are done prioritizing p, when no more Puts are available
+	-- an input is read and given to p and them to q in parallel.
+        (Put c s) <+> s' = put c (s <+> s')
+	s <+> (Put c s') = put c (s <+> s') 
+	(Get f) <+> (Get g) = get $ \b -> (f c) <+> (g c)
+
+-------------------------------------------------------------------------------
+
 
