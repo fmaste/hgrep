@@ -90,6 +90,7 @@ instance Arrow Stream where
 instance ArrowZero Stream where
 
 	-- zeroArrow :: a b c
+	-- The /dev/null stream processor.
 	-- Stream processor also support the natural notion of failure:
 	-- a failing process simply consumes all input and never produces 
 	-- more output.
