@@ -46,6 +46,7 @@ instance Category Stream where
 	id = get $ \b -> put b id
 
 	-- (.) :: cat d c -> cat b d -> cat b c
+	-- Serial composition of stream processes.
 	-- The input of the first parameter is the output of the second one.
 	(Put c s) . stream = put c (s . stream)
 	(Get f) . (Put d s) = (f d) . s
