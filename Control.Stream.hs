@@ -68,6 +68,9 @@ instance Arrow Stream where
 	arr f = get $ \b -> put (f b) (arr f)
 
 	-- first :: a b c -> a (b, d) (c, d)
+	-- Builds a process that feeds the first components of its inputs
+	-- through its argument process, while the second components bypass 
+	-- the process and are recombined with its outputs.
 	first s = bypass [] s where
 		bypass ds (Get f) = get $ \(b, d) -> bypass (ds ++ [d]) (f b)
 		bypass (d : ds) (Put c s) = put (c, d) (bypass ds s)
