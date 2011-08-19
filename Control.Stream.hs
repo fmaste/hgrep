@@ -45,6 +45,7 @@ instance Category Stream where
 	id = get $ \b -> put b id
 
 	-- (.) :: cat d c -> cat b d -> cat b c
+	-- The input of the first parameter is the output of the second one.
 	(Put c s) . stream = put c (s . stream)
 	(Get f) . (Put d s) = (f d) . s
 	(Get f) . (Get g) = get $ \b -> (get f) . (g b)
