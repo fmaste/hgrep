@@ -107,7 +107,7 @@ instance ArrowPlus Stream where
 	-- an input is read and given to p and them to q in parallel.
         (Put c s) <+> s' = put c (s <+> s')
 	s <+> (Put c s') = put c (s <+> s') 
-	(Get f) <+> (Get g) = get $ \b -> (f c) <+> (g c)
+	(Get f) <+> (Get g) = get $ \b -> (f b) <+> (g b)
 
 -- This definitions satisfy this monoidal laws:
 -- zeroArrow <+> q = q
