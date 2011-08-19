@@ -57,8 +57,8 @@ instance Category Stream where
 instance Arrow Stream where
 
 	-- arr :: (b -> c) -> a b c
-	-- Builds a stateless process that just applies a given function to its input to
-	-- to produce its outputs. Also called mapStream.
+	-- Builds a stateless process that just applies a given function to its 
+	-- input to produce its outputs. Also called mapStream.
 	arr f = get $ \b -> put (f b) (arr f)
 
 	-- first :: a b c -> a (b, d) (c, d)
