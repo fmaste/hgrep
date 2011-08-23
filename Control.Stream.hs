@@ -6,6 +6,7 @@ module Control.Stream () where
 import Prelude hiding (id, (.)) -- Using id and . from Category
 import Control.Category
 import Control.Arrow
+import Data.Sequence
 import Data.Either
 
 -------------------------------------------------------------------------------
@@ -71,10 +72,12 @@ instance Arrow Stream where
 	-- Builds a process that feeds the first components of its inputs
 	-- through its argument process, while the second components bypass 
 	-- the process and are recombined with its outputs.
-	first s = bypass [] s where
-		bypass ds (Get f) = get $ \(b, d) -> bypass (ds ++ [d]) (f b)
-		bypass (d : ds) (Put c s) = put (c, d) (bypass ds s)
-		bypass [] (Put c s) = get $ \(b, d) -> put (c, d) (bypass [] s)
+	first s = bypass empty s where
+		bypass q (Get f) = get $ \(b, d) -> bypass (q |> d) (f b)
+		bypass q (Put c s) = 
+			case viewl q of
+				EmptyL -> get $ \(b, d) -> put (c, d) (bypass empty s)
+				d :< q' -> put (c, d) (bypass q' s)
 	-- runStream (first (get $ \b -> id)) [(1, 'a'), (2, 'b')]  :=:  [(2,'a')]
 	-- runStream (first (put 0 id)) [(1, 'a'), (2, 'b')]  :=:  [(0,'a'),(2,'b')]
 	-- runStream (first (get $ \b -> put 0 id)) [(1, 'a'), (2, 'b')]  :=:  [(0,'a'),(2,'b')]
