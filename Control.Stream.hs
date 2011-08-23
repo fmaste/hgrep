@@ -96,6 +96,25 @@ instance Arrow Stream where
 
 -------------------------------------------------------------------------------
 
+-- Arrow laws:
+
+-- arr id >>> f = f
+-- f >>> arr id = f
+-- (f >>> g) >>> h = f >>> (g >>> h)
+-- arr (g . f) = arr f >>> arr g
+-- first (arr f) = arr (f X id)
+-- first (f >>> g) = first f >>> first g
+-- first f >>> arr (id X g) = arr (id X g) >>> first f
+-- first f >>> arr fst = arr fst >>> f
+-- first (first f) >>> arr assoc = arr assoc >>> first f
+-- where:
+-- (X) :: (a -> a') -> (b -> b') -> (a, b) -> (a', b')
+-- (f X g) (a, b) = (f a, g b) 
+-- assoc :: ((a, b), c) -> (a, (b, c))
+-- assoc ((a, b), c) = (a, (b, c))
+
+-------------------------------------------------------------------------------
+
 -- Monoid operations:
 
 instance ArrowZero Stream where
