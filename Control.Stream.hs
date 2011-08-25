@@ -216,6 +216,9 @@ putList :: [c] -> Stream b c -> Stream b c
 putList [] s = s
 putList (c:cs) s = put c (putList cs s)
 
+delay :: c -> Stream c c
+delay c = put c id
+
 constStream :: c -> Stream b c
 constStream c = get $ \b -> put c (constStream c)
 
@@ -224,14 +227,18 @@ filterStream f = get $ \b -> if f b then put b (filterStream f) else (filterStre
 
 -- Also concatMap.
 arrConcat :: (b -> [c]) -> Stream b c
-arrConcat f = get $ \b -> putList (f b) (concatArr f)
+arrConcat f = get $ \b -> putList (f b) (arrConcat f)
 
 -- A mapAccum stream processor. A stream processor with state.
 arrAccum :: (k -> b -> (k, c)) -> k -> Stream b c
-arrAccum f k = get $ \b -> let (k', c) = (f k b) in put c (accumArr f k')
+arrAccum f k = get $ \b -> let (k', c) = (f k b) in put c (arrAccum f k')
+
+-------------------------------------------------------------------------------
 
 data Position = Position Int Int
 	deriving Show
 
-updatePosition (Position ln cl) char = if char == '\n' then (Position (ln+1) 1) else (Position ln (cl+1))
+updatePosition (Position ln cl) char = if char == '\n' then (Position (ln+1) 0) else (Position ln (cl+1))
+
+arrPosition = delay (Position 0 0) . arrAccum (\p c -> let p' = updatePosition p c in (p', p')) (Position 0 0)
 
