@@ -211,6 +211,11 @@ instance ArrowLoop Stream where
 
 -- Stream utility functions:
 
+-- Continuation passing style put of lists.
+putList :: [c] -> Stream b c -> Stream b c
+putList [] s = s
+putList (c:cs) s = put c (putList cs s)
+
 constStream :: c -> Stream b c
 constStream c = get $ \b -> put c (constStream c)
 
