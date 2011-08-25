@@ -223,13 +223,12 @@ filterStream :: (b -> Bool) -> Stream b b
 filterStream f = get $ \b -> if f b then put b (filterStream f) else (filterStream f)
 
 -- Also concatMap.
-concatArr :: (b -> [c]) -> Stream b c
-concatArr f = get $ \b -> putList (f b) (concatArr f)
+arrConcat :: (b -> [c]) -> Stream b c
+arrConcat f = get $ \b -> putList (f b) (concatArr f)
 
-{-
-arrAccum :: (acc -> b -> (c)) -> acc -> Stream b c
-arrAccum f acc = get $ \b -> let (acc',c) = f acc b in put c (arrAccum f acc')
--}
+-- A mapAccum stream processor. A stream processor with state.
+arrAccum :: (k -> b -> (k, c)) -> k -> Stream b c
+arrAccum f k = get $ \b -> let (k', c) = (f k b) in put c (accumArr f k')
 
 data Position = Position Int Int
 	deriving Show
