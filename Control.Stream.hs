@@ -53,6 +53,8 @@ instance Category Stream where
 	(Get f) . (Put d s) = (f d) . s
 	(Get f) . (Get g) = get $ \b -> (get f) . (g b)
 
+-- Defined by Control.Arrow:
+
 -- (>>>) :: a b d -> a d c -> a b c
 -- f >>> g = g . f
 
