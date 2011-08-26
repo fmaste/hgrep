@@ -107,7 +107,7 @@ instance Arrow Stream where
 -- f >>> arr Prelude.id = f
 
 -- (f >>> g) >>> h = f >>> (g >>> h)
--- arr (g . f) = arr f >>> arr g
+-- arr (g Prelude.. f) = arr f >>> arr g
 
 -- first (arr f) = arr (\(a,b) -> (f a,b))
 -- first (f >>> g) = first f >>> first g
