@@ -224,6 +224,12 @@ puts :: [c] -> Stream b c -> Stream b c
 puts [] s = s
 puts (c:cs) s = put c (putList cs s)
 
+-- Continuation passing style skip function.
+skip :: Integer -> Stream b c -> Stream b c
+skip n s
+	| n > 0 = get $ \b -> skip (n - 1) s
+	| otherwise = s
+
 constStream :: c -> Stream b c
 constStream c = get $ \b -> put c (constStream c)
 
