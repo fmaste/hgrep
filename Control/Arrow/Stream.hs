@@ -222,7 +222,7 @@ delay b = put b id
 -- Continuation passing style put for many elements.
 puts :: [c] -> Stream b c -> Stream b c
 puts [] s = s
-puts (c:cs) s = put c (putList cs s)
+puts (c:cs) s = put c (puts cs s)
 
 -- Continuation passing style skip function.
 skip :: Integer -> Stream b c -> Stream b c
