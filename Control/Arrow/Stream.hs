@@ -1,5 +1,5 @@
 
-module Control.Stream () where
+module Control.Arrow.Stream () where
 
 -------------------------------------------------------------------------------
 
