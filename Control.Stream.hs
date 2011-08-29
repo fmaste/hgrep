@@ -209,6 +209,9 @@ instance ArrowLoop Stream where
 	loop (Get f) = get $ \
 -}
 
+delay :: b -> Stream b b
+delay b = put b id
+
 -------------------------------------------------------------------------------
 
 -- Stream utility functions:
@@ -217,9 +220,6 @@ instance ArrowLoop Stream where
 putList :: [c] -> Stream b c -> Stream b c
 putList [] s = s
 putList (c:cs) s = put c (putList cs s)
-
-delay :: c -> Stream c c
-delay c = put c id
 
 constStream :: c -> Stream b c
 constStream c = get $ \b -> put c (constStream c)
