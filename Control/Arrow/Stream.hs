@@ -219,10 +219,10 @@ delay b = put b id
 
 -- Stream utility functions:
 
--- Continuation passing style put of lists.
-putList :: [c] -> Stream b c -> Stream b c
-putList [] s = s
-putList (c:cs) s = put c (putList cs s)
+-- Continuation passing style put for many elements.
+puts :: [c] -> Stream b c -> Stream b c
+puts [] s = s
+puts (c:cs) s = put c (putList cs s)
 
 constStream :: c -> Stream b c
 constStream c = get $ \b -> put c (constStream c)
@@ -232,7 +232,7 @@ filterStream f = get $ \b -> if f b then put b (filterStream f) else (filterStre
 
 -- Also concatMap.
 arrConcat :: (b -> [c]) -> Stream b c
-arrConcat f = get $ \b -> putList (f b) (arrConcat f)
+arrConcat f = get $ \b -> puts (f b) (arrConcat f)
 
 -- A mapAccum stream processor. A stream processor with state.
 arrAccum :: (k -> b -> (k, c)) -> k -> Stream b c
