@@ -257,5 +257,7 @@ data Position = Position {
 updatePosition :: Position -> Char -> Position
 updatePosition (Position ln cl) char = if char == '\n' then (Position (ln+1) 0) else (Position ln (cl+1))
 
-arrPosition = delay (Position 0 0) . arrAccum (\p c -> let p' = updatePosition p c in (p', p')) (Position 0 0)
+-- Returns n + 1 positions, after and before the char
+arrPosition :: Stream Char Position
+arrPosition = put (Position 0 0) $ arrAccum (\p c -> let p' = updatePosition p c in (p', p')) (Position 0 0)
 
