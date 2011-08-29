@@ -2,7 +2,10 @@
 module Control.Arrow.Stream (
 	Stream,
 	put,
-	get) where
+	get,
+	runStream,
+	puts,
+	skip) where
 
 -------------------------------------------------------------------------------
 
