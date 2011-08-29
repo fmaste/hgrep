@@ -249,8 +249,10 @@ arrAccum f k = get $ \b -> let (k', c) = (f k b) in put c (arrAccum f k')
 
 -------------------------------------------------------------------------------
 
-data Position = Position Int Int
-	deriving Show
+data Position = Position {
+	line :: Int,
+	col :: Int 
+} deriving Show
 
 updatePosition (Position ln cl) char = if char == '\n' then (Position (ln+1) 0) else (Position ln (cl+1))
 
