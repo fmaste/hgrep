@@ -233,6 +233,9 @@ skip n s
 	| n > 0 = get $ \b -> skip (n - 1) s
 	| otherwise = s
 
+devNull :: Stream b c
+devNull = zeroArrow
+
 constStream :: c -> Stream b c
 constStream c = get $ \b -> put c (constStream c)
 
