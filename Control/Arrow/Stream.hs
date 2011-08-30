@@ -18,24 +18,24 @@ import Data.Either
 -------------------------------------------------------------------------------
 
 -- One way to represent stream processors is using the datatype:
-data Stream b c = Put c (Stream b c) | Get (b -> Stream b c)
--- where Put b f represents a stream processor that is ready to output c and
+data Stream i o = Put o (Stream i o) | Get (i -> Stream i o)
+-- where Put o f represents a stream processor that is ready to output o and
 -- continue with f, and Get k represents a stream processor waiting for an
--- input b, which will continue by passing it to k.
+-- input i, which will continue by passing it to k.
 -- Stream processors are them constructed using the following continuation 
 -- style operations for these actions:
-put :: c -> Stream b c -> Stream b c
+put :: o -> Stream i o -> Stream i o
 put = Put
--- which constructs a stream processor which outputs the b and them behaves
+-- which constructs a stream processor which outputs the o and them behaves
 -- like the second argument, and
-get :: (b -> Stream b c) -> Stream b c
+get :: (i -> Stream i o) -> Stream i o
 get = Get
 -- which constructs a stream processor which waits for an input, passes it
 -- to its function argument, and them behaves like the result.
 -- Stream processors can be interpreted as stream functions by the function:
-runStream :: Stream b c -> [b] -> [c]
-runStream (Put c s) bs     = c : runStream s bs
-runStream (Get k)   (b:bs) = runStream (k b) bs
+runStream :: Stream i o -> [i] -> [o]
+runStream (Put o s) is     = o : runStream s is
+runStream (Get k)   (i:is) = runStream (k i) is
 runStream (Get k)   []     = []
 -- We concern ourselfs for the time being with processes that have one input
 -- channel and one output channel. 
@@ -50,14 +50,14 @@ instance Category Stream where
 	-- id :: cat a a
 	-- Redirects the whole stream to the output untouched.
 	-- Get something them put it back and continue doing the same.
-	id = get $ \b -> put b id
+	id = get $ \i -> put i id
 
 	-- (.) :: cat d c -> cat b d -> cat b c
 	-- Serial composition of stream processes.
 	-- The input of the first parameter is the output of the second one.
-	(Put c s) . stream = put c (s . stream)
-	(Get f) . (Put d s) = (f d) . s
-	(Get f) . (Get g) = get $ \b -> (get f) . (g b)
+	(Put o s) . stream = put o (s . stream)
+	(Get f) . (Put o s) = (f o) . s
+	(Get f) . (Get g) = get $ \i -> (get f) . (g i)
 
 -- Defined by Control.Arrow:
 
@@ -74,18 +74,18 @@ instance Arrow Stream where
 	-- arr :: (b -> c) -> a b c
 	-- Builds a stateless process that just applies a given function to its 
 	-- input to produce its outputs. Also called mapStream.
-	arr f = get $ \b -> put (f b) (arr f)
+	arr f = get $ \i -> put (f i) (arr f)
 
 	-- first :: a b c -> a (b, d) (c, d)
 	-- Builds a process that feeds the first components of its inputs
 	-- through its argument process, while the second components bypass 
 	-- the process and are recombined with its outputs.
 	first s = bypass empty s where
-		bypass q (Get f) = get $ \(b, d) -> bypass (q |> d) (f b)
-		bypass q (Put c s) = 
+		bypass q (Get f) = get $ \(i, d) -> bypass (q |> d) (f i)
+		bypass q (Put o s) = 
 			case viewl q of
-				EmptyL -> get $ \(b, d) -> put (c, d) (bypass empty s)
-				d :< q' -> put (c, d) (bypass q' s)
+				EmptyL -> get $ \(b, d) -> put (o, d) (bypass empty s)
+				d :< q' -> put (o, d) (bypass q' s)
 	-- runStream (first (get $ \b -> id)) [(1, 'a'), (2, 'b')]  :=:  [(2,'a')]
 	-- runStream (first (put 0 id)) [(1, 'a'), (2, 'b')]  :=:  [(0,'a'),(2,'b')]
 	-- runStream (first (get $ \b -> put 0 id)) [(1, 'a'), (2, 'b')]  :=:  [(0,'a'),(2,'b')]
@@ -144,9 +144,9 @@ instance ArrowPlus Stream where
 	-- We define p <+> q to run in parallel, merging their outputs.
 	-- All the Puts are done prioritizing p, when no more Puts are available
 	-- an input is read and given to p and them to q in parallel.
-        (Put c s) <+> s' = put c (s <+> s')
-	s <+> (Put c s') = put c (s <+> s') 
-	(Get f) <+> (Get g) = get $ \b -> (f b) <+> (g b)
+        (Put o s) <+> s' = put o (s <+> s')
+	s <+> (Put o s') = put o (s <+> s') 
+	(Get f) <+> (Get g) = get $ \i -> (f i) <+> (g i)
 
 -- This definitions satisfy this monoidal laws:
 -- zeroArrow <+> q = q
@@ -167,9 +167,9 @@ instance ArrowChoice Stream where
 	-- left :: a b c -> a (Either b d) (Either c d)
 	-- Converts the process on one that passes messages tagged Left 
 	-- through it while the Right ones are passed untouched.
-	left (Put c s) = put (Left c) (left s)
+	left (Put o s) = put (Left o) (left s)
 	left (Get f) = get $ either 
-				(\b -> left (f b)) 
+				(\i -> left (f i)) 
 				(\d -> put (Right d) (left $ get f))
 
 	-- right :: a b c -> a (Either d b) (Either d c)
@@ -215,40 +215,40 @@ instance ArrowLoop Stream where
 	loop (Get f) = get $ \
 -}
 
-delay :: b -> Stream b b
-delay b = put b id
+delay :: i -> Stream i i
+delay i = put i id
 
 -------------------------------------------------------------------------------
 
 -- Stream utility functions:
 
 -- Continuation passing style put for many elements.
-puts :: [c] -> Stream b c -> Stream b c
+puts :: [o] -> Stream i o -> Stream i o
 puts [] s = s
-puts (c:cs) s = put c (puts cs s)
+puts (o:os) s = put o (puts os s)
 
 -- Continuation passing style skip function.
-skip :: Integer -> Stream b c -> Stream b c
+skip :: Integer -> Stream i o -> Stream i o
 skip n s
-	| n > 0 = get $ \b -> skip (n - 1) s
+	| n > 0 = get $ \i -> skip (n - 1) s
 	| otherwise = s
 
 devNull :: Stream b c
 devNull = zeroArrow
 
-constStream :: c -> Stream b c
-constStream c = get $ \b -> put c (constStream c)
+constStream :: o -> Stream i o
+constStream o = get $ \b -> put o (constStream o)
 
-filterStream :: (b -> Bool) -> Stream b b
-filterStream f = get $ \b -> if f b then put b (filterStream f) else (filterStream f)
+filterStream :: (i -> Bool) -> Stream i i
+filterStream f = get $ \i -> if f i then put i (filterStream f) else (filterStream f)
 
 -- Also concatMap.
-arrConcat :: (b -> [c]) -> Stream b c
-arrConcat f = get $ \b -> puts (f b) (arrConcat f)
+arrConcat :: (i -> [o]) -> Stream i o
+arrConcat f = get $ \i -> puts (f i) (arrConcat f)
 
 -- A mapAccum stream processor. A stream processor with state.
-arrAccum :: (k -> b -> (k, c)) -> k -> Stream b c
-arrAccum f k = get $ \b -> let (k', c) = (f k b) in put c (arrAccum f k')
+arrAccum :: (k -> i -> (k, o)) -> k -> Stream i o
+arrAccum f k = get $ \i -> let (k', o) = (f k i) in put o (arrAccum f k')
 
 -------------------------------------------------------------------------------
 
@@ -263,4 +263,5 @@ updatePosition (Position ln cl) char = if char == '\n' then (Position (ln+1) 0) 
 -- Returns n + 1 positions, after and before the char
 arrPosition :: Stream Char Position
 arrPosition = put (Position 0 0) $ arrAccum (\p c -> let p' = updatePosition p c in (p', p')) (Position 0 0)
+
 
