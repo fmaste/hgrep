@@ -9,7 +9,8 @@ module Control.Arrow.Stream (
 	delay,
 	arrFilter,
 	arrConcat,
-	arrAccum) where
+	arrAccum,
+	arrAccumConcat) where
 
 -------------------------------------------------------------------------------
 
@@ -257,4 +258,7 @@ arrConcat f = get $ \i -> puts (f i) (arrConcat f)
 -- A mapAccum stream processor. A stream processor with state.
 arrAccum :: (k -> i -> (k, o)) -> k -> Stream i o
 arrAccum f k = get $ \i -> let (k', o) = (f k i) in put o (arrAccum f k')
+
+arrAccumConcat :: (k -> i -> (k, [o])) -> k -> Stream i o
+arrAccumConcat f k = get $ \i -> let (k', os) = (f k i) in puts os (arrAccumConcat f k')
 
