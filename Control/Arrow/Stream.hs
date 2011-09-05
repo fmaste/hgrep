@@ -242,7 +242,7 @@ skip n s
 	| otherwise = s
 
 arrConst :: o -> Stream i o
-arrConst o = get $ \b -> put o (arrConst o)
+arrConst o = get $ \_ -> put o (arrConst o)
 
 arrFilter :: (i -> Bool) -> Stream i i
 arrFilter f = get $ \i -> if f i then put i (arrFilter f) else (arrFilter f)
