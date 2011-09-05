@@ -241,9 +241,6 @@ skip n s
 	| n > 0 = get $ \i -> skip (n - 1) s
 	| otherwise = s
 
-devNull :: Stream b c
-devNull = zeroArrow
-
 arrConst :: o -> Stream i o
 arrConst o = get $ \b -> put o (arrConst o)
 
