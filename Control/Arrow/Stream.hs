@@ -7,6 +7,7 @@ module Control.Arrow.Stream (
 	puts,
 	skip,
 	delay,
+	arrConst,
 	arrFilter,
 	arrConcat,
 	arrAccum,
@@ -245,8 +246,8 @@ skip n s
 devNull :: Stream b c
 devNull = zeroArrow
 
-constStream :: o -> Stream i o
-constStream o = get $ \b -> put o (constStream o)
+arrConst :: o -> Stream i o
+arrConst o = get $ \b -> put o (arrConst o)
 
 arrFilter :: (i -> Bool) -> Stream i i
 arrFilter f = get $ \i -> if f i then put i (arrFilter f) else (arrFilter f)
