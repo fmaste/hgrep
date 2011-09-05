@@ -1,8 +1,7 @@
 
 module Control.Arrow.Stream (
 	Stream,
-	put,
-	get,
+	put, get,
 	runStream,
 	puts,
 	skip,
